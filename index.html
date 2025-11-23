@@ -107,36 +107,38 @@
         // Wartet, bis der Anmeldestatus bekannt ist, bevor Firestore verwendet wird.
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Benutzer ist erfolgreich angemeldet
                 userId = user.uid;
                 userDisplay.textContent = `Angemeldet als: ${userId}`;
-            } else {
-                // Wenn kein Token vorhanden ist (z.B. in einer lokalen Umgebung), anonym anmelden
-                try {
-                    await signInAnonymously(auth);
-                    // Die onAuthStateChanged-Funktion wird erneut aufgerufen, wenn die anonyme Anmeldung erfolgreich ist.
-                    return;
-                } catch (error) {
-                    console.error("Anonyme Anmeldung fehlgeschlagen:", error);
-                    userDisplay.textContent = 'Fehler bei der Anmeldung.';
-                }
-            }
-            isAuthReady = true;
-            if(userId) {
+                isAuthReady = true;
+                // Startet den Listener nur, wenn der Benutzer erfolgreich angemeldet ist
                 setupRealtimeListener(userId);
+            } else if (!isAuthReady) {
+                // Nur beim ersten Mal (Initialisierung) versuchen, sich anzumelden, falls kein Benutzer gefunden wurde
+                try {
+                    if (initialAuthToken) {
+                        // 1. Mit Custom Token anmelden
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        // onAuthStateChanged wird nach erfolgreicher Anmeldung erneut mit dem Benutzer aufgerufen
+                        return;
+                    } else {
+                        // 2. Anonym anmelden (Fallback)
+                        await signInAnonymously(auth);
+                        // onAuthStateChanged wird nach erfolgreicher Anmeldung erneut mit dem Benutzer aufgerufen
+                        return;
+                    }
+                } catch (error) {
+                    // Fehlerbehandlung, wenn Custom Token oder anonyme Anmeldung fehlschlagen
+                    console.error("Anmeldung fehlgeschlagen:", error);
+                    userDisplay.textContent = 'Fehler bei der Anmeldung. Bitte versuchen Sie es erneut.';
+                    isAuthReady = true; // Setze bereit, auch wenn fehlerhaft, um Endlosschleifen zu vermeiden
+                    loadingIndicator.textContent = 'Fehler beim Laden der Aufgaben aufgrund fehlender Berechtigung.';
+                }
+            } else {
+                // Zustand, wenn die Anmeldung abgeschlossen ist, aber kein Benutzer vorhanden ist (z.B. nach Abmeldung)
+                console.warn("Kein Benutzer angemeldet und keine Initialisierung erforderlich.");
             }
         });
-
-        // Versuche, sich mit dem bereitgestellten Token anzumelden
-        if (initialAuthToken) {
-            signInWithCustomToken(auth, initialAuthToken).catch(error => {
-                console.error("Anmeldung mit Custom Token fehlgeschlagen:", error);
-                // Fallback zur anonymen Anmeldung, wenn Token fehlschlägt
-                signInAnonymously(auth).catch(err => console.error("Anonyme Anmeldung fehlgeschlagen:", err));
-            });
-        } else if (!auth.currentUser) {
-             // Wenn kein Token vorhanden ist, aber onAuthStateChanged noch nicht ausgelöst wurde, anonym anmelden
-            signInAnonymously(auth).catch(err => console.error("Anonyme Anmeldung fehlgeschlagen:", err));
-        }
 
 
         // --- FIRESTORE HILFSFUNKTIONEN ---
