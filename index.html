@@ -418,15 +418,17 @@
         // --- HOLZBERECHNUNG LOGIK ---
 
         /**
-         * Formel zur Festmeterberechnung (Huber'sche Formel): V = (Pi / 4) * D² * L
+         * Formel zur Festmeterberechnung (Huber'sche Formel / Mittenabschnittsformel): 
+         * V = (Pi / 4) * D² * L
          * D: Mitteldurchmesser in Metern
          * L: Länge in Metern
          * @returns {number} Volumen in Festmetern (FM)
          */
         function calculateLogVolume(diameter, length) {
             if (diameter <= 0 || length <= 0) return 0;
-            // Math.PI / 4 ist ca. 0.785398
-            const volume = (Math.PI / 4) * diameter * diameter * length;
+            // Die Konstante Pi/4 (ca. 0.785398) multipliziert mit dem Quadrat des Durchmessers und der Länge.
+            const piOver4 = Math.PI / 4; 
+            const volume = piOver4 * diameter * diameter * length;
             return parseFloat(volume.toFixed(3)); // Auf 3 Nachkommastellen runden
         }
 
@@ -848,6 +850,7 @@
 
             if (length <= 0 || diameter <= 0) { alertMessage("Länge und Durchmesser müssen gültige Zahlen (> 0) sein.", 'error'); return; }
 
+            // Neuberechnung mit der aktualisierten Formel
             const newVolume = calculateLogVolume(diameter, length);
 
             const updatedData = {
