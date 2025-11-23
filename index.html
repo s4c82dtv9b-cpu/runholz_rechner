@@ -111,3 +111,38 @@
             background-color: #e6e6e6;
             font-weight: 600;
         }
+
+        /* Media Query für den Druck */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .app-container, .calculator-ui {
+                display: none !important;
+            }
+            .credit-note-view, .credit-note-view * {
+                visibility: visible;
+                display: block !important;
+            }
+            .credit-note-view {
+                position: absolute;
+                left: 0;
+                top: 0;
+                padding: 0;
+                margin: 0;
+                background: white;
+            }
+            .credit-note-paper {
+                box-shadow: none;
+                margin: 0;
+                padding: 1cm;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+            @page {
+                margin: 0;
+                size: auto;
+            }
+        }
