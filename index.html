@@ -51,6 +51,20 @@
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
             border-width: 2px;
         }
+        /* Button Anpassungen für Kompaktheit */
+        .action-button {
+            padding: 8px 16px; /* Kleineres Padding */
+            font-size: 0.875rem; /* Kleinerer Text (sm) */
+        }
+        /* Mobile: Flexbox für die Buttons */
+        @media (max-width: 767px) {
+            .button-container {
+                display: flex;
+                flex-wrap: wrap; /* Erlaubt das Umbrechen auf neue Zeile, falls nötig */
+                justify-content: flex-start;
+                gap: 0.5rem; /* Kleinerer Abstand zwischen Buttons */
+            }
+        }
     </style>
 </head>
 <body class="bg-indigo-50 min-h-screen flex flex-col lg:flex-row">
@@ -86,15 +100,28 @@
                 
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4">
                     <h2 class="text-2xl font-bold text-gray-700">Rundholz-Protokoll & Festmeterberechnung</h2>
-                    <!-- NEU: PDF Button -->
-                    <button 
-                        id="generatePdfButton" 
-                        onclick="generatePdf()"
-                        class="mt-4 md:mt-0 px-6 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition duration-150 ease-in-out shadow-lg focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-emerald-300 flex items-center"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        PDF Gutschrift erstellen
-                    </button>
+                    <!-- NEUE BUTTON GRUPPE: Kompakt und zentriert -->
+                    <div class="button-container flex space-x-2 mt-4 md:mt-0">
+                        <!-- Archiv Button -->
+                        <button 
+                            id="archiveButton" 
+                            onclick="archiveLogs()"
+                            class="action-button bg-yellow-500 text-white font-bold rounded-xl hover:bg-yellow-600 transition duration-150 ease-in-out shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300 flex items-center justify-center"
+                        >
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                            Archivieren
+                        </button>
+
+                        <!-- PDF Button -->
+                        <button 
+                            id="generatePdfButton" 
+                            onclick="generatePdf()"
+                            class="action-button bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition duration-150 ease-in-out shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-300 flex items-center justify-center"
+                        >
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Gutschrift erstellen
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Erste Zeile: Kunde, Holzart, Qualität -->
@@ -338,7 +365,7 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, deleteDoc, updateDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, addDoc, deleteDoc, updateDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // DOM-Elemente
         const userDisplayDesktop = document.getElementById('user-display');
@@ -360,7 +387,7 @@
         const editModal = document.getElementById('edit-modal');
         const editLogForm = document.getElementById('edit-log-form');
         const generatePdfButton = document.getElementById('generatePdfButton');
-
+        const archiveButton = document.getElementById('archiveButton'); 
 
         const views = {
             holz: document.getElementById('view-holz'),
@@ -705,6 +732,16 @@
             // Speicherung in artifacts/{appId}/users/{userId}/woodLogs
             return `artifacts/${appId}/users/${uid}/woodLogs`;
         }
+        
+        /**
+         * Erstellt den korrekten Pfad zur Archiv-Sammlung (Private Collection).
+         * @param {string} uid Die Firebase User ID.
+         * @returns {string} Der Pfad zur Sammlung.
+         */
+        function getArchiveCollectionPath(uid) {
+            // Speicherung in artifacts/{appId}/users/{userId}/woodLogsArchive
+            return `artifacts/${appId}/users/${uid}/woodLogsArchive`;
+        }
 
         /**
          * Rendet die Log-Einträge in der Tabelle.
@@ -719,20 +756,32 @@
                  logSummaryTable.innerHTML = '<p class="text-center text-gray-500 p-6">Bitte zuerst einen Kunden in der Kundenverwaltung anlegen.</p>';
                  totalVolumeSpan.textContent = '0.000';
                  allLogs = [];
+                 // Deaktiviere Buttons, da kein Kunde/keine Logs
+                 archiveButton.disabled = true;
+                 generatePdfButton.disabled = true;
                  return;
             }
+            
+            // Finde den aktuell ausgewählten Kunden
+            const selectedCustomerId = selectCustomer.value;
+            const customerLogs = selectedCustomerId ? logs.filter(log => log.customerId === selectedCustomerId) : logs;
+            
+            // Re-Enable Buttons
+            archiveButton.disabled = !selectedCustomerId || customerLogs.length === 0;
+            generatePdfButton.disabled = !selectedCustomerId || customerLogs.length === 0;
 
-            if (logs.length === 0) {
-                logSummaryTable.innerHTML = '<p class="text-center text-gray-500 p-6">Noch keine Stammeinträge für diesen Benutzer vorhanden.</p>';
+
+            if (customerLogs.length === 0) {
+                logSummaryTable.innerHTML = '<p class="text-center text-gray-500 p-6">Keine Stammeinträge für den aktuell ausgewählten Kunden vorhanden.</p>';
                 totalVolumeSpan.textContent = '0.000';
                 return;
             }
 
             // Sortieren nach Erstellungsdatum (neueste zuerst)
-            logs.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+            customerLogs.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
             allLogs = logs; // Aktualisiere die globale Liste
 
-            logs.forEach(log => {
+            customerLogs.forEach(log => {
                 totalVolume += log.volume;
                 // Kundenname aus der aktuellen Kundenliste suchen (für den Fall, dass der Name sich geändert hat)
                 const customer = allCustomers.find(c => c.id === log.customerId);
@@ -763,6 +812,11 @@
             totalVolumeSpan.textContent = totalVolume.toFixed(3);
         }
         
+        // Listener für die Kundenauswahl, um die Logs neu zu filtern
+        selectCustomer.addEventListener('change', () => {
+            renderLogs(allLogs);
+        });
+
         /**
          * Setzt den Firestore Listener für Holz-Protokolle.
          * @param {string} uid Die Firebase User ID.
@@ -829,6 +883,7 @@
          * @param {Array} customers Die Liste der Kunden.
          */
         function populateCustomerSelect(customers) {
+            const currentSelection = selectCustomer.value;
             selectCustomer.innerHTML = '<option value="">-- Kunden auswählen --</option>';
             // Sortiere nach Nachnamen
             customers.sort((a, b) => a.nachname.localeCompare(b.nachname));
@@ -841,12 +896,11 @@
             });
             
             // Versuche, die zuvor ausgewählte ID wieder zu setzen
-            const currentSelection = selectCustomer.value;
             if (currentSelection && customers.some(c => c.id === currentSelection)) {
                 selectCustomer.value = currentSelection;
             } else if (customers.length > 0) {
                  // Setze den ersten Kunden, falls keiner ausgewählt ist
-                selectCustomer.value = customers[0].id;
+                // selectCustomer.value = customers[0].id; // Lassen wir leer, damit der Nutzer bewusst wählt
             }
         }
         
@@ -858,7 +912,7 @@
             customerList.innerHTML = ''; // Lösche vorherige Einträge
 
             if (customers.length === 0) {
-                customerList.innerHTML = '<p class="text-center text-gray-500 p-6">Keine Kunden gefunden.</p>';
+                customerList.innerHTML = '<p id="loading-customers" class="text-center text-gray-500 p-6">Keine Kunden gefunden.</p>';
                 return;
             }
             
@@ -957,10 +1011,10 @@
         window.deleteCustomer = async function(customerId) {
             if (!userId) { alertMessage("Bitte warten Sie auf die Benutzeranmeldung.", 'error'); return; }
 
-            // Überprüfe, ob der Kunde noch Protokolle hat
+            // Überprüfe, ob der Kunde noch Protokolle hat (Hauptlogs)
             const logsForCustomer = allLogs.filter(log => log.customerId === customerId);
             if (logsForCustomer.length > 0) {
-                alertMessage(`Kunde hat noch ${logsForCustomer.length} Protokolle. Diese müssen zuerst gelöscht oder einem anderen Kunden zugeordnet werden.`, 'error');
+                alertMessage(`Kunde hat noch ${logsForCustomer.length} aktuelle Protokolle. Diese müssen zuerst archiviert oder gelöscht werden.`, 'error');
                 return;
             }
 
@@ -1113,37 +1167,105 @@
             doc.save(`Rundholzprotokoll_${customer.nachname}_${date.replace(/\./g, '-')}.pdf`);
             alertMessage("PDF-Gutschrift erfolgreich erstellt.", 'success');
         }
+        
+        // --- ARCHIVIERUNGSLOGIK ---
+        
+        /**
+         * Archiviert alle Logs des aktuell ausgewählten Kunden.
+         * Die Logs werden in die Archiv-Sammlung verschoben und aus der Hauptsammlung gelöscht (atomare Batch-Operation).
+         */
+        window.archiveLogs = async function() {
+            if (!userId) { 
+                alertMessage("Bitte warten Sie auf die Benutzeranmeldung.", 'error'); 
+                return; 
+            }
+            
+            const customerId = selectCustomer.value;
+            if (!customerId) {
+                alertMessage("Bitte wählen Sie einen Kunden aus, dessen Protokolle archiviert werden sollen.", 'error');
+                return;
+            }
+
+            const customerLogs = allLogs.filter(log => log.customerId === customerId);
+            if (customerLogs.length === 0) {
+                alertMessage("Keine Logs zum Archivieren für diesen Kunden gefunden.", 'error');
+                return;
+            }
+            
+            if (!confirm(`Sind Sie sicher, dass Sie alle ${customerLogs.length} Protokolle für diesen Kunden archivieren möchten? Die Einträge werden aus der aktuellen Liste entfernt.`)) {
+                return;
+            }
+
+            const batch = writeBatch(db);
+            const woodLogsRef = collection(db, getLogCollectionPath(userId));
+            const archiveLogsRef = collection(db, getArchiveCollectionPath(userId));
+            let archiveCount = 0;
+
+            try {
+                customerLogs.forEach(log => {
+                    const originalDocRef = doc(woodLogsRef, log.id);
+                    // 1. Dokument in Archiv kopieren (Entferne 'id' für den Firestore-Add-Vorgang)
+                    const logToArchive = { ...log };
+                    delete logToArchive.id; // ID aus dem Objekt entfernen, damit Firestore eine neue generiert
+                    logToArchive.archivedAt = serverTimestamp(); // Archivierungszeitpunkt hinzufügen
+                    
+                    // Füge das neue Archiv-Dokument hinzu (Firestore generiert die ID)
+                    const newArchiveDocRef = doc(archiveLogsRef);
+                    batch.set(newArchiveDocRef, logToArchive);
+
+                    // 2. Originaldokument zur Löschung markieren
+                    batch.delete(originalDocRef);
+                    archiveCount++;
+                });
+
+                // 3. Batch-Operation ausführen
+                await batch.commit();
+
+                alertMessage(`${archiveCount} Protokolle erfolgreich archiviert und gelöscht.`, 'success');
+
+            } catch (e) {
+                console.error("Fehler bei der Archivierung (Batch-Operation fehlgeschlagen): ", e);
+                alertMessage("Fehler bei der Archivierung. Bitte versuchen Sie es erneut.", 'error');
+            }
+        }
 
 
         // --- UTILITY FUNKTIONEN ---
 
         /**
-         * Zeigt eine temporäre Benachrichtigung an (Erfolg oder Fehler) über den PDF-Button.
+         * Zeigt eine temporäre Benachrichtigung an (Erfolg oder Fehler) über dem PDF/Archiv-Button.
          * @param {string} message Die anzuzeigende Nachricht.
          * @param {'success'|'error'} type Der Typ der Nachricht.
          */
         function alertMessage(message, type) {
             console.log(`[${type.toUpperCase()}] ${message}`);
             
-            // Verwendung des PDF-Buttons als temporäre Statusanzeige (für visuelles Feedback)
-            const originalText = generatePdfButton.innerHTML;
+            // Wähle den Button für das Feedback
+            // Wir nutzen den PDF Button, da er oft als erstes sichtbar ist.
+            const button = generatePdfButton; 
+            const originalText = button.innerHTML;
             const isSuccess = type === 'success';
 
-            // Speichere die Original-Klasse (hässlich, aber funktioniert) und ändere sie
-            const originalClass = generatePdfButton.className;
+            // Speichere die Original-Klasse und setze sie zurück (nur die Farben)
+            const originalClass = button.className;
             
-            // Setze die neue Klasse basierend auf dem Typ
-            let newClass = originalClass.replace(/bg-(emerald|red|green)-\d+/g, isSuccess ? 'bg-green-700' : 'bg-red-700');
-            newClass = newClass.replace(/focus:ring-(emerald|red|green)-\d+/g, isSuccess ? 'focus:ring-green-300' : 'focus:ring-red-300');
+            // Definiere die temporäre Klasse
+            let tempClass = originalClass.replace(/bg-(emerald|red|yellow)-\d+/g, isSuccess ? 'bg-green-700' : 'bg-red-700');
+            tempClass = tempClass.replace(/focus:ring-(emerald|red|yellow)-\d+/g, isSuccess ? 'focus:ring-green-300' : 'focus:ring-red-300');
 
             
-            generatePdfButton.className = newClass;
-            generatePdfButton.innerHTML = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${isSuccess ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'}"></path></svg>${message}`;
+            button.className = tempClass;
+            button.innerHTML = `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${isSuccess ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12'}"></path></svg>${message}`;
 
 
             setTimeout(() => {
-                generatePdfButton.className = originalClass; // Setze Klasse zurück
-                generatePdfButton.innerHTML = originalText; // Setze Text zurück
+                // Setze die Klassen beider Buttons auf ihre ursprünglichen Zustände zurück
+                generatePdfButton.className = originalClass; 
+                archiveButton.className = archiveButton.className.replace(/bg-(emerald|red|yellow)-\d+/g, 'bg-yellow-500').replace(/focus:ring-(emerald|red|yellow)-\d+/g, 'focus:ring-yellow-300');
+
+                // Setze den Text zurück
+                generatePdfButton.innerHTML = `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Gutschrift erstellen`;
+                archiveButton.innerHTML = `<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>Archivieren`;
             }, 3000);
         }
 
