@@ -8,6 +8,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lade Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lade jsPDF für PDF-Erstellung -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Lade jspdf-autotable für einfache Tabellen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         :root {
             font-family: 'Inter', sans-serif;
@@ -77,7 +82,19 @@
 
             <!-- Ansicht: Holzberechnung (Rundholz Protokoll) -->
             <section id="view-holz" class="view-section space-y-10 bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
-                <h2 class="text-2xl font-bold text-gray-700 border-b pb-4">Rundholz-Protokoll & Festmeterberechnung</h2>
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4">
+                    <h2 class="text-2xl font-bold text-gray-700">Rundholz-Protokoll & Festmeterberechnung</h2>
+                    <!-- NEU: PDF Button -->
+                    <button 
+                        id="generatePdfButton" 
+                        onclick="generatePdf()"
+                        class="mt-4 md:mt-0 px-6 py-2 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition duration-150 ease-in-out shadow-lg focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-emerald-300 flex items-center"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        PDF Gutschrift erstellen
+                    </button>
+                </div>
                 
                 <!-- Erste Zeile: Kunde, Holzart, Qualität -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -156,7 +173,7 @@
                             <span class="hidden lg:block">Kunde</span>
                             <span>Holzart</span>
                             <span>Qualität</span>
-                            <span class="text-center">Klasse</span> <!-- NEU: Stärkeklasse -->
+                            <span class="text-center">Klasse</span> <!-- Stärkeklasse -->
                             <span>Länge (m)</span>
                             <span>Ø Mitte (cm)</span>
                             <span class="text-right">Volumen (FM)</span>
@@ -341,6 +358,7 @@
         const totalVolumeSpan = document.getElementById('total-volume');
         const editModal = document.getElementById('edit-modal');
         const editLogForm = document.getElementById('edit-log-form');
+        const generatePdfButton = document.getElementById('generatePdfButton');
 
 
         const views = {
@@ -363,7 +381,7 @@
 
         let userId = null;
         let isAuthReady = false;
-        let isListenersSetup = false; // NEU: Flag, um doppelten Listener-Start zu verhindern
+        let isListenersSetup = false; // Flag, um doppelten Listener-Start zu verhindern
         let allCustomers = []; 
         let allLogs = []; // Speichert alle Log-Einträge
 
@@ -390,7 +408,7 @@
             }
         }
         
-        // NEU: Hinzufügen von Event Listeners für die Tabs
+        // Hinzufügen von Event Listeners für die Tabs
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.tab-button').forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -552,14 +570,14 @@
             if (lengthM <= 0 || diameterCm <= 0) { alertMessage("Länge und Durchmesser müssen gültige Zahlen (> 0) sein.", 'error'); return; }
 
             const volume = calculateLogVolume(diameterCm, lengthM);
-            const staerkeKlasse = classifyDiameter(diameterCm); // NEU: Stärkeklasse berechnen
+            const staerkeKlasse = classifyDiameter(diameterCm); // Stärkeklasse berechnen
 
             const logData = {
                 customerId: customerId,
                 customerName: customerName,
                 holzart: holzartSelect.value,
                 qualitaet: holzqualitaetSelect.value,
-                staerkeKlasse: staerkeKlasse, // NEU: Stärkeklasse speichern
+                staerkeKlasse: staerkeKlasse, // Stärkeklasse speichern
                 length: lengthM,
                 diameter: diameterCm, // Speichern in CM
                 volume: volume,
@@ -799,11 +817,11 @@
 
             if (logs.length === 0) {
                 logSummaryTable.innerHTML = '<p class="text-center text-gray-500 p-6 border border-dashed border-gray-100 m-4 rounded-lg">Bisher keine Stämme im Protokoll erfasst.</p>';
+                generatePdfButton.disabled = true;
             } else {
+                generatePdfButton.disabled = false;
                 const fragment = document.createDocumentFragment();
                 logs.forEach(log => {
-                    // Überprüfung, falls alte Einträge noch den Durchmesser in Metern gespeichert haben.
-                    // Wir gehen davon aus, dass in der DB der Durchmesser in CM gespeichert ist, da wir die UI geändert haben.
                     const diameterDisplay = log.diameter ? log.diameter.toFixed(0) : 'N/A';
                     
                     totalVolume += log.volume;
@@ -829,7 +847,7 @@
                 <span class="text-gray-700 font-medium col-span-1">${log.holzart}</span>
                 <span class="text-gray-500 col-span-1">${log.qualitaet.toUpperCase()}</span>
 
-                <!-- NEU: Stärkeklasse anzeigen -->
+                <!-- Stärkeklasse anzeigen -->
                 <span class="text-indigo-600 font-extrabold col-span-1 text-center">${log.staerkeKlasse || 'N/A'}</span>
                 
                 <span class="text-gray-600 col-span-1">${log.length.toFixed(2)}</span>
@@ -916,7 +934,7 @@
 
             // Neuberechnung mit der korrigierten Formel (D_cm und L_m)
             const newVolume = calculateLogVolume(diameterCm, lengthM);
-            const newStaerkeKlasse = classifyDiameter(diameterCm); // NEU: Klasse neu berechnen
+            const newStaerkeKlasse = classifyDiameter(diameterCm); // Klasse neu berechnen
 
             const updatedData = {
                 holzart: holzart,
@@ -924,7 +942,7 @@
                 length: lengthM,
                 diameter: diameterCm,
                 volume: newVolume,
-                staerkeKlasse: newStaerkeKlasse, // NEU: Klasse aktualisieren
+                staerkeKlasse: newStaerkeKlasse, // Klasse aktualisieren
                 updatedAt: serverTimestamp()
             };
 
@@ -966,6 +984,200 @@
                 alertDiv.classList.add('opacity-0', 'translate-x-10');
                 setTimeout(() => alertDiv.remove(), 500);
             }, 3000);
+        }
+
+        // --- PDF GENERIERUNG LOGIK ---
+        
+        window.generatePdf = function() {
+            const selectedCustomerId = selectCustomer.value;
+            if (!selectedCustomerId) {
+                alertMessage("Bitte wählen Sie zuerst einen Kunden aus.", 'error');
+                return;
+            }
+
+            // 1. Daten filtern und aggregieren
+            const customer = allCustomers.find(c => c.id === selectedCustomerId);
+            if (!customer) {
+                alertMessage("Kunde nicht gefunden.", 'error');
+                return;
+            }
+
+            const customerLogs = allLogs.filter(log => log.customerId === selectedCustomerId);
+            if (customerLogs.length === 0) {
+                 alertMessage("Für diesen Kunden sind keine Stämme erfasst.", 'error');
+                return;
+            }
+
+            // Aggregation nach Stärkeklasse
+            const volumeByClass = customerLogs.reduce((acc, log) => {
+                const klasse = log.staerkeKlasse || 'N/A';
+                acc[klasse] = (acc[klasse] || 0) + log.volume;
+                return acc;
+            }, {});
+
+            const totalVolume = customerLogs.reduce((sum, log) => sum + log.volume, 0);
+
+            // 2. Finanzielle Berechnung (Annahme: Netto-Preis pro Festmeter)
+            const PRICE_PER_FM_NET = 100.00; // Standardpreis: 100.00 €/FM Netto
+            const VAT_RATE = 0.13; // 13% Mehrwertsteuer (MwSt)
+
+            const totalNetValue = totalVolume * PRICE_PER_FM_NET;
+            const totalVat = totalNetValue * VAT_RATE;
+            const totalGrossValue = totalNetValue + totalVat;
+
+
+            // 3. PDF erstellen
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let yPos = 20;
+
+            // --- SEITE 1: GUTSCHRIFT UND ZUSAMMENFASSUNG ---
+            
+            // Header (Sägewerk Mülleder in Grün)
+            doc.setFontSize(24);
+            doc.setTextColor('#059669'); // Emerald-Green
+            doc.setFont('helvetica', 'bold');
+            doc.text("Sägewerk Mülleder", 20, yPos);
+            yPos += 15;
+
+            // Dokumententitel
+            doc.setFontSize(18);
+            doc.setTextColor('#000000');
+            doc.text("Gutschrift Rundholz", 20, yPos);
+            yPos += 10;
+            
+            // Rechnungsdetails (Datum, Gutschrift-Nr.)
+            doc.setFontSize(10);
+            doc.text(`Datum: ${new Date().toLocaleDateString('de-AT')}`, 180, 20, { align: 'right' });
+            doc.text(`Gutschrift-Nr.: ${Date.now().toString().slice(-8)}`, 180, 25, { align: 'right' });
+            yPos = 40;
+
+            // Kundenadresse
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text("Anschrift Empfänger:", 20, yPos);
+            yPos += 5;
+            doc.text(`${customer.anrede} ${customer.vorname} ${customer.nachname}`, 20, yPos + 5);
+            doc.text(`${customer.adresse} ${customer.hausnummer}`, 20, yPos + 10);
+            doc.text(`${customer.plz} ${customer.ort}`, 20, yPos + 15);
+            yPos += 30;
+            
+            // Menge nach Stärkeklasse Tabelle
+            doc.setFontSize(14);
+            doc.text("1. Mengenübersicht nach Stärkeklasse", 20, yPos);
+            yPos += 5;
+
+            const classTableData = Object.keys(volumeByClass).map(klasse => [
+                klasse,
+                `${volumeByClass[klasse].toFixed(3)} FM`,
+                `${PRICE_PER_FM_NET.toFixed(2)} €`,
+                `${(volumeByClass[klasse] * PRICE_PER_FM_NET).toFixed(2)} €`
+            ]);
+
+            classTableData.push([
+                { content: 'Gesamtvolumen Netto', colSpan: 1, styles: { fontStyle: 'bold' } },
+                { content: `${totalVolume.toFixed(3)} FM`, colSpan: 1, styles: { fontStyle: 'bold' } },
+                { content: '', colSpan: 1, styles: { fontStyle: 'bold' } },
+                { content: `${totalNetValue.toFixed(2)} €`, colSpan: 1, styles: { fontStyle: 'bold' } }
+            ]);
+
+            doc.autoTable({
+                startY: yPos + 5,
+                head: [['Klasse', 'Festmeter (FM)', 'Einzelpreis Netto (€)', 'Wert Netto (€)']],
+                body: classTableData,
+                theme: 'striped',
+                headStyles: { fillColor: [79, 70, 229], textColor: 255 }, // Indigo-Farbe
+                styles: { fontSize: 10, cellPadding: 3 },
+                columnStyles: {
+                    0: { cellWidth: 30 },
+                    1: { cellWidth: 30, halign: 'right' },
+                    2: { halign: 'right' },
+                    3: { halign: 'right' }
+                },
+                didDrawPage: (data) => {
+                     // Fußzeile mit Seitenzahlen
+                    doc.setFontSize(8);
+                    doc.setTextColor(150);
+                    doc.text(`Seite ${doc.internal.getNumberOfPages()}`, data.settings.margin.left + 150, doc.internal.pageSize.height - 10);
+                }
+            });
+            yPos = doc.autoTable.previous.finalY + 10;
+            
+            // 3. Abrechnung und MwSt
+            doc.setFontSize(14);
+            doc.text("2. Abrechnung", 20, yPos);
+            yPos += 5;
+
+            const financeTableData = [
+                ['Nettobetrag gesamt', '', `${totalNetValue.toFixed(2)} €`],
+                ['13% Mehrwertsteuer (MwSt)', '', `${totalVat.toFixed(2)} €`],
+                [
+                    { content: 'GUTSCHRIFT-GESAMTBETRAG', styles: { fontStyle: 'bold', fontSize: 12, fillColor: [21, 128, 61], textColor: 255 } }, // Grüner Hintergrund
+                    { content: '', styles: { fillColor: [21, 128, 61] } },
+                    { content: `${totalGrossValue.toFixed(2)} €`, styles: { fontStyle: 'bold', fontSize: 12, fillColor: [21, 128, 61], textColor: 255, halign: 'right' } }
+                ]
+            ];
+
+            doc.autoTable({
+                startY: yPos + 5,
+                head: [['Beschreibung', 'Anmerkung', 'Betrag (€)']],
+                body: financeTableData,
+                theme: 'plain',
+                styles: { fontSize: 10, cellPadding: 3 },
+                columnStyles: {
+                    0: { cellWidth: 90 },
+                    2: { halign: 'right' }
+                }
+            });
+            
+            // --- SEITE 2: Detailliertes Protokoll ---
+            doc.addPage();
+            yPos = 20;
+
+            doc.setFontSize(18);
+            doc.setTextColor('#000000');
+            doc.setFont('helvetica', 'bold');
+            doc.text("Detailliertes Rundholz-Protokoll", 20, yPos);
+            yPos += 10;
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Kunde: ${customer.nachname}, ${customer.vorname}`, 20, yPos);
+            yPos += 10;
+            
+            const detailTableData = customerLogs.map((log, index) => [
+                index + 1,
+                log.holzart,
+                log.qualitaet.toUpperCase(),
+                log.staerkeKlasse,
+                log.length.toFixed(2),
+                log.diameter.toFixed(0),
+                log.volume.toFixed(3)
+            ]);
+
+            doc.autoTable({
+                startY: yPos + 5,
+                head: [['Lfd. Nr.', 'Holzart', 'Qualität', 'Klasse', 'Länge (m)', 'Ø Mitte (cm)', 'Volumen (FM)']],
+                body: detailTableData,
+                theme: 'striped',
+                headStyles: { fillColor: [79, 70, 229], textColor: 255 }, 
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 15 },
+                    6: { halign: 'right' }
+                },
+                // Aktiviere den Hook, um Seitenzahlen zu handhaben
+                didDrawPage: (data) => {
+                     // Fußzeile mit Seitenzahlen
+                    doc.setFontSize(8);
+                    doc.setTextColor(150);
+                    doc.text(`Seite ${doc.internal.getNumberOfPages()}`, data.settings.margin.left + 150, doc.internal.pageSize.height - 10);
+                }
+            });
+
+            // Speichern der PDF-Datei
+            doc.save(`Gutschrift_${customer.nachname}_${new Date().getFullYear()}.pdf`);
+            alertMessage("PDF Gutschrift erfolgreich erstellt!", 'success');
         }
 
     </script>
