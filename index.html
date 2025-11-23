@@ -3,163 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rundholz-Volumenrechner</title>
-    <!-- Tailwind CSS CDN für das Styling -->
+    <title>Rundholzrechner</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': '#4CAF50', // Grüner Farbton für den Forst
-                        'secondary': '#8BC34A',
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Zusätzliches Styling, falls nötig, z.B. für Fokus-Effekte */
-        input:focus {
-            outline: 2px solid theme('colors.primary');
-            outline-offset: 2px;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #1e293b;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        .btn-primary {
+            background-color: #10b981;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 700;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #059669;
+        }
+        .result-box {
+            background-color: #064e3b;
+            border: 1px solid #10b981;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        input[type="number"], select {
+            border: 1px solid #475569;
+            padding: 0.75rem;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #334155;
+            color: #f1f5f9;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input[type="number"]:focus, select:focus {
+            border-color: #10b981;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 bg-gray-100 font-sans">
+<body>
 
-    <!-- Hauptcontainer für die App -->
-    <div id="app" class="w-full max-w-lg bg-white shadow-2xl rounded-xl p-8 space-y-8 border-t-4 border-primary">
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center mb-8 text-emerald-400">Rundholzrechner</h1>
 
-        <h1 class="text-3xl font-extrabold text-gray-800 text-center">Rundholz-Volumenrechner</h1>
-        <p class="text-center text-gray-500">Berechnung nach der Würfelformel (Grundfläche * Länge).</p>
-
-        <!-- Formular für die Eingaben -->
         <div class="space-y-6">
-            
             <!-- Eingabe für die Länge -->
-            <div>
-                <label for="length" class="block text-sm font-medium text-gray-700 mb-2">Länge des Stammes (in Metern)</label>
-                <input type="number" id="length" min="0.01" step="0.01" placeholder="z.B. 4.0"
-                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
-                       value="4.0">
-                <p id="length-error" class="text-red-500 text-xs mt-1 hidden">Bitte geben Sie eine gültige Länge ein.</p>
+            <div class="input-group">
+                <label for="length" class="block mb-1">Länge (in Metern):</label>
+                <input type="number" id="length" min="0.1" step="0.1" placeholder="z.B. 4.1" class="shadow-md">
             </div>
 
-            <!-- Eingabe für den Mittendurchmesser (oder den Durchmesser der kleineren Seite) -->
-            <div>
-                <label for="diameter" class="block text-sm font-medium text-gray-700 mb-2">Mittendurchmesser (in Zentimetern)</label>
-                <input type="number" id="diameter" min="1" step="1" placeholder="z.B. 30"
-                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
-                       value="30">
-                <p id="diameter-error" class="text-red-500 text-xs mt-1 hidden">Bitte geben Sie einen gültigen Durchmesser ein.</p>
+            <!-- Eingabe für den Mittendurchmesser (oder Zopfdurchmesser) -->
+            <div class="input-group">
+                <label for="diameter" class="block mb-1">Durchmesser (in cm, ohne Rinde):</label>
+                <input type="number" id="diameter" min="5" step="1" placeholder="z.B. 30" class="shadow-md">
+                <p class="text-sm text-gray-400 mt-1">Hier den Zopfdurchmesser oder Mittendurchmesser eingeben.</p>
             </div>
 
-            <!-- Anzahl der Stämme -->
-            <div>
-                <label for="count" class="block text-sm font-medium text-gray-700 mb-2">Anzahl der Stämme</label>
-                <input type="number" id="count" min="1" step="1" placeholder="z.B. 1"
-                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
-                       value="1">
+            <!-- Auswahl der Qualität/Holzart -->
+            <div class="input-group">
+                <label for="quality" class="block mb-1">Qualität/Holzart:</label>
+                <select id="quality" class="w-full p-3 rounded bg-gray-700 border border-gray-600 focus:border-emerald-500 focus:outline-none text-white">
+                    <option value="Kaeferholz">Käferholz (Borkenkäfer)</option>
+                    <option value="AB" selected>A/B (Gute Bauholzqualität)</option>
+                    <option value="Braunkern">Braunkernholz</option>
+                    <option value="CX">C-Holz (Industrie/CX)</option>
+                </select>
             </div>
-
-            <!-- Berechnen Button -->
-            <button onclick="calculateVolume()"
-                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-semibold text-white bg-primary hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-200 ease-in-out transform hover:scale-[1.01]">
-                Volumen berechnen
-            </button>
         </div>
 
-        <!-- Ergebnis-Anzeige -->
-        <div id="result-container" class="mt-8 p-5 bg-secondary/10 border border-secondary rounded-lg hidden">
-            <h2 class="text-xl font-semibold text-gray-800 mb-2">Ergebnis</h2>
-            <p class="text-lg text-gray-700">Gesamtvolumen: <span id="volume-output" class="font-bold text-primary">0.00 m³</span></p>
-            <p class="text-sm text-gray-600 mt-1">Volumen pro Stamm: <span id="single-volume-output" class="font-medium">0.00 m³</span></p>
+        <button onclick="calculateWoodVolume()" class="btn-primary w-full mt-8 mb-6 shadow-xl">
+            Volumen berechnen
+        </button>
+
+        <!-- Ergebnisbereich -->
+        <div id="result" class="result-box mt-4 hidden">
+            <h2 class="text-xl font-semibold mb-2 text-emerald-300">Ergebnis</h2>
+            <p id="volumeResult" class="text-xl font-mono text-white"></p>
+            <p id="qualityNote" class="text-sm text-gray-200 mt-2"></p>
         </div>
 
+        <!-- Fehlermeldungen -->
+        <div id="error" class="bg-red-900 border border-red-400 text-red-300 px-4 py-3 rounded relative mt-4 hidden" role="alert">
+            <strong class="font-bold">Fehler:</strong>
+            <span class="block sm:inline" id="errorMessage"></span>
+        </div>
     </div>
 
-    <!-- JavaScript Logik -->
     <script>
+        // Setzt Firebase-bezogene Variablen auf leere Strings, da sie hier nicht verwendet werden
+        const __app_id = '';
+        const __firebase_config = '';
+        const __initial_auth_token = '';
+
+        // Hilfsfunktionen für TTS, die hier irrelevant, aber vorhanden sind
+        function base64ToArrayBuffer(base64) { /* ... */ }
+        function pcmToWav(pcm16, sampleRate) { /* ... */ }
+        function playAudio(base64AudioData, mimeType) { /* ... */ }
+        // Ende der Hilfsfunktionen
+
+
         /**
-         * Hauptfunktion zur Berechnung des Rundholzvolumens.
-         * Verwendet die mittlere Durchmesser-Formel (Kreisfläche * Länge).
+         * Berechnet das Volumen eines Baumstamms basierend auf der Länge und dem Durchmesser.
          */
-        function calculateVolume() {
+        function calculateWoodVolume() {
+            // **DEBUG-HINWEIS:** Prüfen Sie die Konsole (F12) auf diese Meldung. Wenn sie erscheint, wird der Button korrekt geklickt.
+            console.log("Berechnungsfunktion gestartet.");
+
             // Elemente abrufen
             const lengthInput = document.getElementById('length');
             const diameterInput = document.getElementById('diameter');
-            const countInput = document.getElementById('count');
-            const resultContainer = document.getElementById('result-container');
-            const volumeOutput = document.getElementById('volume-output');
-            const singleVolumeOutput = document.getElementById('single-volume-output');
-            const lengthError = document.getElementById('length-error');
-            const diameterError = document.getElementById('diameter-error');
+            const qualitySelect = document.getElementById('quality');
+            const resultDiv = document.getElementById('result');
+            const volumeResult = document.getElementById('volumeResult');
+            const qualityNote = document.getElementById('qualityNote');
+            const errorDiv = document.getElementById('error');
+            const errorMessage = document.getElementById('errorMessage');
 
             // Fehlermeldungen zurücksetzen
-            lengthError.classList.add('hidden');
-            diameterError.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+            resultDiv.classList.add('hidden');
             
-            // Eingabewerte parsen
-            const L = parseFloat(lengthInput.value); // Länge in Metern
-            const D_cm = parseFloat(diameterInput.value); // Durchmesser in Zentimetern
-            const N = parseInt(countInput.value, 10); // Anzahl der Stämme
+            try {
+                const length = parseFloat(lengthInput.value);
+                const diameter = parseFloat(diameterInput.value);
+                const quality = qualitySelect.value;
 
-            let isValid = true;
+                // Eingabe validieren (Dies ist der wahrscheinlichste Grund, warum "nichts" passiert: die Validierung wird ausgelöst.)
+                if (isNaN(length) || isNaN(diameter) || length <= 0 || diameter <= 0) {
+                    errorMessage.textContent = 'Bitte geben Sie gültige positive Werte für Länge und Durchmesser ein.';
+                    errorDiv.classList.remove('hidden');
+                    console.error("Berechnungsfehler: Ungültige oder fehlende Eingabewerte.");
+                    return; // Beendet die Funktion hier, wenn Eingaben fehlen.
+                }
 
-            // 1. Validierung der Länge
-            if (isNaN(L) || L <= 0) {
-                lengthError.classList.remove('hidden');
-                isValid = false;
+                // Umrechnung des Durchmessers in Meter und des Radius
+                const diameter_m = diameter / 100;
+                const radius_m = diameter_m / 2;
+
+                // Berechnung des Volumens
+                const volume = Math.PI * radius_m * radius_m * length;
+                const volume_m3 = volume.toFixed(4);
+
+                // Ergebnis anzeigen
+                volumeResult.textContent = `Volumen: ${volume_m3} Festmeter (m³f o.R.)`;
+                resultDiv.classList.remove('hidden');
+
+                // Anmerkung zur Qualität hinzufügen
+                let note = '';
+                switch (quality) {
+                    case 'AB':
+                        note = 'Qualität A/B: Entspricht meist gutem Bau- und Schnittholz. Hohe Preisklasse.';
+                        break;
+                    case 'Braunkern':
+                        note = 'Braunkernholz: Holz mit Braunfärbung im Kern. Die technische Eignung kann eingeschränkt sein, oft Preisabschlag.';
+                        break;
+                    case 'CX':
+                        note = 'Qualität CX: Sehr geringe Qualität, oft als Brennholz, Industrieholz oder nur für einfache Zwecke geeignet.';
+                        break;
+                    case 'Kaeferholz':
+                        note = 'Käferholz: Betroffen von Borkenkäfer. Muss schnell verarbeitet werden. Preisabschlag üblich.';
+                        break;
+                    default:
+                        note = 'Keine spezielle Anmerkung für diese Qualität.';
+                }
+                qualityNote.textContent = note;
+
+            } catch (error) {
+                // **DEBUG-HINWEIS:** Fängt unerwartete Fehler während der Berechnung ab.
+                errorMessage.textContent = `Ein unerwarteter Fehler ist aufgetreten: ${error.message}`;
+                errorDiv.classList.remove('hidden');
+                console.error("Unerwarteter JavaScript-Fehler:", error);
             }
-
-            // 2. Validierung des Durchmessers
-            if (isNaN(D_cm) || D_cm <= 0) {
-                diameterError.classList.remove('hidden');
-                isValid = false;
-            }
-
-            // 3. Validierung der Stückzahl (N darf 0 sein, muss aber mindestens 1 sein, wenn eingegeben)
-            if (isNaN(N) || N < 1) {
-                // Wenn N ungültig, setzen wir es für die Berechnung auf 1 und zeigen es nicht als Fehler, 
-                // da das Feld einen Standardwert hat.
-                const N = 1; 
-            }
-            
-            if (!isValid) {
-                resultContainer.classList.add('hidden');
-                return;
-            }
-
-            // Umrechnung des Durchmessers D von cm in Meter R (Radius)
-            // D_cm / 100 ergibt den Durchmesser in Metern (D_m)
-            // D_m / 2 ergibt den Radius in Metern (R)
-            const R = (D_cm / 100) / 2; 
-
-            // Formel: V = π * R² * L
-            // π * R² ist die Grundfläche des Stammes (A)
-            const volumeSingle = Math.PI * Math.pow(R, 2) * L;
-            
-            // Gesamtvolumen = Volumen pro Stamm * Anzahl der Stämme
-            const volumeTotal = volumeSingle * N;
-
-            // Ergebnisse formatieren und anzeigen (auf 3 Dezimalstellen runden)
-            const formattedSingleVolume = volumeSingle.toFixed(3);
-            const formattedTotalVolume = volumeTotal.toFixed(3);
-
-            singleVolumeOutput.textContent = `${formattedSingleVolume} m³`;
-            volumeOutput.textContent = `${formattedTotalVolume} m³`;
-
-            // Ergebnisbereich sichtbar machen
-            resultContainer.classList.remove('hidden');
         }
-
-        // Bei Laden der Seite die Standardwerte einmalig berechnen lassen
-        document.addEventListener('DOMContentLoaded', () => {
-             // Kurze Verzögerung, um sicherzustellen, dass alle Elemente gerendert sind
-             setTimeout(calculateVolume, 100); 
-        });
-
     </script>
+
 </body>
 </html>
