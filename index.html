@@ -3,78 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ToDo Manager - Mit Firestore</title>
+    <title>Holz- & Kunden-Dashboard</title>
     <!-- Lade Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lade Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Konfiguriere Tailwind für das 'Inter' Font */
         :root {
             font-family: 'Inter', sans-serif;
         }
-        /* Stil für die abgeschlossene Aufgabe */
-        .completed-task .task-text {
-            text-decoration: line-through;
-            color: #9ca3af; /* gray-400 */
-        }
-        /* Custom Scrollbar für die Aufgabenliste */
-        #todo-list-container::-webkit-scrollbar {
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
-        #todo-list-container::-webkit-scrollbar-thumb {
+        .custom-scrollbar::-webkit-scrollbar-thumb {
             background-color: #9ca3af; /* gray-400 */
             border-radius: 4px;
         }
-        #todo-list-container::-webkit-scrollbar-track {
+        .custom-scrollbar::-webkit-scrollbar-track {
             background: #f1f5f9; /* gray-100 */
         }
-        /* Animation für neue Aufgaben */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeIn {
-            animation: fadeIn 0.3s ease-out;
+        /* Aktiver Tab-Stil */
+        .tab-active {
+            background-color: #4f46e5 !important; /* indigo-600 */
+            color: white !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 sm:p-8 flex items-start justify-center">
+<body class="bg-gray-100 min-h-screen flex flex-col lg:flex-row">
 
-    <div class="w-full max-w-2xl bg-white shadow-xl rounded-2xl p-6 sm:p-8 space-y-6">
-        <header class="text-center">
-            <h1 class="text-4xl font-bold text-gray-800">Meine Aufgaben</h1>
-            <p id="user-display" class="text-sm text-gray-500 mt-1"></p>
-        </header>
+    <!-- Navigationsleiste (Sidebar / Tabs) -->
+    <nav class="lg:w-64 w-full bg-white shadow-lg p-4 lg:p-6 flex lg:flex-col lg:space-y-4 space-x-2 lg:space-x-0 overflow-x-auto border-b lg:border-b-0">
+        <h2 class="text-xl font-bold text-gray-800 hidden lg:block mb-4">Dashboard</h2>
 
-        <!-- Eingabebereich für neue Aufgaben -->
-        <form id="add-task-form" class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-            <input
-                type="text"
-                id="task-input"
-                placeholder="Neue Aufgabe eingeben..."
-                required
-                class="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-            >
-            <button
-                type="submit"
-                id="add-button"
-                class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition duration-150 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-                Hinzufügen
-            </button>
-        </form>
+        <button id="tab-holz" class="tab-button flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition duration-150 bg-indigo-600 text-white tab-active" onclick="showView('holz')">
+            Holzberechnung
+        </button>
+        <button id="tab-kunden" class="tab-button flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition duration-150 text-gray-700 bg-gray-200 hover:bg-gray-300" onclick="showView('kunden')">
+            Kundenverwaltung
+        </button>
 
-        <!-- Liste der Aufgaben -->
-        <div id="todo-list-container" class="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
-            <!-- Aufgaben werden hier von JavaScript eingefügt -->
-            <p id="loading-indicator" class="text-center text-gray-500 p-4">Lade Aufgaben...</p>
+        <p id="user-display" class="text-xs text-gray-500 mt-auto hidden lg:block pt-4 border-t"></p>
+    </nav>
+
+    <!-- Hauptinhalt -->
+    <main class="flex-grow p-4 sm:p-8">
+        <div class="max-w-4xl mx-auto">
+            
+            <header class="mb-8">
+                <h1 class="text-3xl font-extrabold text-gray-800">Projekt-Dashboard</h1>
+                <p class="text-sm text-gray-500 lg:hidden mt-1" id="user-display-mobile"></p>
+            </header>
+
+            <!-- Ansicht: Holzberechnung -->
+            <section id="view-holz" class="view-section space-y-8 bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
+                <h2 class="text-2xl font-semibold text-gray-700 border-b pb-3">Volumen- und Preisberechnung</h2>
+                
+                <form id="wood-calculation-form" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Länge -->
+                    <div>
+                        <label for="length" class="block text-sm font-medium text-gray-700">Länge (m)</label>
+                        <input type="number" id="length" value="1.0" min="0.01" step="0.01" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <!-- Breite -->
+                    <div>
+                        <label for="width" class="block text-sm font-medium text-gray-700">Breite (m)</label>
+                        <input type="number" id="width" value="0.1" min="0.01" step="0.01" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <!-- Dicke -->
+                    <div>
+                        <label for="thickness" class="block text-sm font-medium text-gray-700">Dicke (m)</label>
+                        <input type="number" id="thickness" value="0.05" min="0.01" step="0.01" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <!-- Preis pro m³ -->
+                    <div>
+                        <label for="price_per_m3" class="block text-sm font-medium text-gray-700">Preis pro m³ (€)</label>
+                        <input type="number" id="price_per_m3" value="500" min="0" step="0.01" required class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </form>
+
+                <div id="wood-result" class="bg-indigo-50 p-6 rounded-xl border border-indigo-200">
+                    <h3 class="text-lg font-semibold text-indigo-800 mb-2">Ergebnis:</h3>
+                    <p id="result-volume" class="text-xl font-bold text-gray-800">Volumen: 0.005 m³</p>
+                    <p id="result-price" class="text-xl font-bold text-gray-800 mt-1">Gesamtpreis: 2.50 €</p>
+                </div>
+                
+            </section>
+
+            <!-- Ansicht: Kundenverwaltung -->
+            <section id="view-kunden" class="view-section hidden space-y-6 bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
+                <h2 class="text-2xl font-semibold text-gray-700 border-b pb-3">Kundenverwaltung (Echtzeit)</h2>
+
+                <!-- Formular zur Kundenerstellung -->
+                <form id="add-customer-form" class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                    <input
+                        type="text"
+                        id="customer-name-input"
+                        placeholder="Kundenname eingeben"
+                        required
+                        class="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                    >
+                     <input
+                        type="text"
+                        id="customer-contact-input"
+                        placeholder="Kontakt (E-Mail/Tel.)"
+                        class="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                    >
+                    <button
+                        type="submit"
+                        class="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-150 ease-in-out shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    >
+                        Kunde hinzufügen
+                    </button>
+                </form>
+
+                <!-- Kundenliste -->
+                <div class="mt-6 border rounded-xl custom-scrollbar max-h-96 overflow-y-auto">
+                    <div class="hidden md:grid grid-cols-5 gap-4 p-3 font-semibold text-gray-600 bg-gray-50 border-b rounded-t-xl">
+                        <span class="col-span-2">Name</span>
+                        <span class="col-span-2">Kontakt</span>
+                        <span></span> <!-- Aktionen -->
+                    </div>
+                    <div id="customer-list" class="divide-y divide-gray-200">
+                        <p id="loading-customers" class="text-center text-gray-500 p-4">Lade Kunden...</p>
+                        <!-- Kunden werden hier dynamisch eingefügt -->
+                    </div>
+                </div>
+
+            </section>
         </div>
-
-        <footer class="text-center text-sm text-gray-400 pt-4 border-t border-gray-200">
-            Alle Daten werden in Echtzeit mit Firestore gespeichert.
-        </footer>
-    </div>
+    </main>
 
     <script type="module">
         // Globale Variablen für Firebase (werden vom Canvas-Environment bereitgestellt)
@@ -85,236 +144,274 @@
         // Firebase Imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, addDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // DOM-Elemente
-        const todoListContainer = document.getElementById('todo-list-container');
-        const addTaskForm = document.getElementById('add-task-form');
-        const taskInput = document.getElementById('task-input');
-        const userDisplay = document.getElementById('user-display');
-        const loadingIndicator = document.getElementById('loading-indicator');
+        const userDisplayDesktop = document.getElementById('user-display');
+        const userDisplayMobile = document.getElementById('user-display-mobile');
+        const loadingCustomers = document.getElementById('loading-customers');
+        const customerList = document.getElementById('customer-list');
+        const addCustomerForm = document.getElementById('add-customer-form');
+        const views = {
+            holz: document.getElementById('view-holz'),
+            kunden: document.getElementById('view-kunden')
+        };
+        const tabs = {
+            holz: document.getElementById('tab-holz'),
+            kunden: document.getElementById('tab-kunden')
+        };
+        const woodInputs = {
+            length: document.getElementById('length'),
+            width: document.getElementById('width'),
+            thickness: document.getElementById('thickness'),
+            price_per_m3: document.getElementById('price_per_m3'),
+            resultVolume: document.getElementById('result-volume'),
+            resultPrice: document.getElementById('result-price')
+        };
+
 
         // Firebase Initialisierung
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        setLogLevel('debug'); // Wichtig für das Debuggen von Firestore-Operationen
+        setLogLevel('debug');
 
         let userId = null;
         let isAuthReady = false;
 
-        // --- AUTHENTIFIZIERUNG ---
-        // Wartet, bis der Anmeldestatus bekannt ist, bevor Firestore verwendet wird.
+        // --- AUTHENTIFIZIERUNG UND INITIALISIERUNG ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 // Benutzer ist erfolgreich angemeldet
                 userId = user.uid;
-                userDisplay.textContent = `Angemeldet als: ${userId}`;
+                userDisplayDesktop.textContent = `Angemeldet als: ${userId}`;
+                userDisplayMobile.textContent = `Benutzer-ID: ${userId}`;
                 isAuthReady = true;
-                // Startet den Listener nur, wenn der Benutzer erfolgreich angemeldet ist
-                setupRealtimeListener(userId);
+                // Startet den Firestore-Listener für Kunden
+                setupCustomerListener(userId);
             } else if (!isAuthReady) {
-                // Nur beim ersten Mal (Initialisierung) versuchen, sich anzumelden, falls kein Benutzer gefunden wurde
+                // Nur beim ersten Mal versuchen, sich anzumelden
                 try {
                     if (initialAuthToken) {
-                        // 1. Mit Custom Token anmelden
                         await signInWithCustomToken(auth, initialAuthToken);
-                        // onAuthStateChanged wird nach erfolgreicher Anmeldung erneut mit dem Benutzer aufgerufen
-                        return;
                     } else {
-                        // 2. Anonym anmelden (Fallback)
                         await signInAnonymously(auth);
-                        // onAuthStateChanged wird nach erfolgreicher Anmeldung erneut mit dem Benutzer aufgerufen
-                        return;
                     }
                 } catch (error) {
-                    // Fehlerbehandlung, wenn Custom Token oder anonyme Anmeldung fehlschlagen
                     console.error("Anmeldung fehlgeschlagen:", error);
-                    userDisplay.textContent = 'Fehler bei der Anmeldung. Bitte versuchen Sie es erneut.';
-                    isAuthReady = true; // Setze bereit, auch wenn fehlerhaft, um Endlosschleifen zu vermeiden
-                    loadingIndicator.textContent = 'Fehler beim Laden der Aufgaben aufgrund fehlender Berechtigung.';
+                    userDisplayDesktop.textContent = 'Fehler bei der Anmeldung.';
+                    userDisplayMobile.textContent = 'Fehler bei der Anmeldung.';
+                    isAuthReady = true;
+                    if(loadingCustomers) loadingCustomers.textContent = 'Fehler beim Laden der Kunden aufgrund fehlender Berechtigung.';
                 }
-            } else {
-                // Zustand, wenn die Anmeldung abgeschlossen ist, aber kein Benutzer vorhanden ist (z.B. nach Abmeldung)
-                console.warn("Kein Benutzer angemeldet und keine Initialisierung erforderlich.");
             }
         });
 
-
-        // --- FIRESTORE HILFSFUNKTIONEN ---
+        // --- DASHBOARD NAVIGATION ---
 
         /**
-         * Erstellt den Pfad zur ToDo-Liste des aktuellen Benutzers.
+         * Wechselt zwischen den Dashboard-Ansichten (Tabs).
+         * @param {string} viewName 'holz' oder 'kunden'.
+         */
+        window.showView = function(viewName) {
+            // Ansichten ausblenden/einblenden
+            Object.keys(views).forEach(key => {
+                views[key].classList.add('hidden');
+                tabs[key].classList.remove('tab-active');
+                tabs[key].classList.remove('bg-indigo-600', 'text-white');
+                tabs[key].classList.add('text-gray-700', 'bg-gray-200', 'hover:bg-gray-300');
+            });
+
+            // Aktive Ansicht und Tab hervorheben
+            views[viewName].classList.remove('hidden');
+            tabs[viewName].classList.add('tab-active');
+            tabs[viewName].classList.add('bg-indigo-600', 'text-white');
+            tabs[viewName].classList.remove('text-gray-700', 'bg-gray-200', 'hover:bg-gray-300');
+            
+            // Wenn zur Holzberechnung gewechselt wird, sofort neu berechnen
+            if (viewName === 'holz') {
+                calculateWood();
+            }
+        }
+
+        // --- HOLZBERECHNUNG ---
+
+        /**
+         * Berechnet Volumen und Preis basierend auf den Eingaben.
+         */
+        function calculateWood() {
+            const L = parseFloat(woodInputs.length.value) || 0;
+            const B = parseFloat(woodInputs.width.value) || 0;
+            const D = parseFloat(woodInputs.thickness.value) || 0;
+            const pricePerM3 = parseFloat(woodInputs.price_per_m3.value) || 0;
+
+            // Volumenberechnung (in Kubikmetern)
+            const volume = L * B * D;
+            // Gesamtpreisberechnung
+            const totalPrice = volume * pricePerM3;
+
+            // Anzeige der Ergebnisse (formatiert auf 3 Dezimalstellen für Volumen und 2 für Preis)
+            woodInputs.resultVolume.textContent = `Volumen: ${volume.toFixed(3)} m³`;
+            woodInputs.resultPrice.textContent = `Gesamtpreis: ${totalPrice.toFixed(2)} €`;
+        }
+
+        // Hinzufügen von Event-Listenern zu allen Eingabefeldern der Holzberechnung
+        Object.values(woodInputs).forEach(input => {
+            if (input.type === 'number') {
+                input.addEventListener('input', calculateWood);
+            }
+        });
+
+        // Initiale Berechnung beim Laden
+        calculateWood();
+
+
+        // --- KUNDENVERWALTUNG (FIRESTORE) ---
+
+        /**
+         * Erstellt den Pfad zur Kundensammlung des aktuellen Benutzers.
          * @param {string} currentUserId Die ID des aktuellen Benutzers.
          * @returns {string} Der Firestore-Pfad zur Sammlung.
          */
-        function getCollectionPath(currentUserId) {
-             // Pfad: /artifacts/{appId}/users/{userId}/todos
-            return `artifacts/${appId}/users/${currentUserId}/todos`;
+        function getCustomerCollectionPath(currentUserId) {
+             // Pfad: /artifacts/{appId}/users/{userId}/customers
+            return `artifacts/${appId}/users/${currentUserId}/customers`;
         }
-
+        
         /**
-         * Stellt den Echtzeit-Listener für die ToDo-Liste ein.
+         * Stellt den Echtzeit-Listener für die Kundenliste ein.
          * @param {string} currentUserId Die ID des aktuellen Benutzers.
          */
-        function setupRealtimeListener(currentUserId) {
-            const todosRef = collection(db, getCollectionPath(currentUserId));
-            const q = query(todosRef); // Keine orderBy, um keine Indexfehler zu riskieren
-
-            // Entferne den Ladeindikator
-            loadingIndicator.remove();
+        function setupCustomerListener(currentUserId) {
+            const customersRef = collection(db, getCustomerCollectionPath(currentUserId));
+            const q = query(customersRef);
 
             // onSnapshot liefert Echtzeit-Updates
             onSnapshot(q, (snapshot) => {
-                const todos = [];
+                loadingCustomers.remove(); // Ladeindikator entfernen
+
+                const customers = [];
                 snapshot.forEach(doc => {
-                    // Füge die Dokumenten-ID zur Aufgabe hinzu
-                    todos.push({ id: doc.id, ...doc.data() });
+                    customers.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Sortiere die Aufgaben lokal (abgeschlossene ans Ende, neueste zuerst bei nicht-abgeschlossenen)
-                todos.sort((a, b) => {
-                    // Abgeschlossene Aufgaben ans Ende
-                    if (a.completed !== b.completed) {
-                        return a.completed ? 1 : -1;
-                    }
-                    // Nicht abgeschlossene Aufgaben nach Erstellungszeit (neueste zuerst)
-                    return (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0);
-                });
+                // Sortiere Kunden nach Erstellungszeit (neueste zuerst)
+                customers.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
 
-                renderTodos(todos);
+                renderCustomers(customers);
             }, (error) => {
-                console.error("Fehler beim Abrufen der ToDos:", error);
-                todoListContainer.innerHTML = `<p class="text-center text-red-500 p-4">Fehler beim Laden der Aufgaben: ${error.message}</p>`;
+                console.error("Fehler beim Abrufen der Kunden:", error);
+                customerList.innerHTML = `<p class="text-center text-red-500 p-4">Fehler beim Laden der Kunden: ${error.message}</p>`;
             });
         }
 
         /**
-         * Fügt eine neue Aufgabe zu Firestore hinzu.
-         * @param {string} text Der Text der neuen Aufgabe.
+         * Fügt einen neuen Kunden zu Firestore hinzu.
          */
-        async function addTodo(text) {
+        addCustomerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('customer-name-input');
+            const contactInput = document.getElementById('customer-contact-input');
+            const name = nameInput.value.trim();
+            const contact = contactInput.value.trim();
+
             if (!userId) {
-                console.warn("Benutzer nicht angemeldet. Aktion abgebrochen.");
+                alertMessage("Bitte warten Sie auf die Benutzeranmeldung.", 'error');
                 return;
             }
 
-            const todosRef = collection(db, getCollectionPath(userId));
-            try {
-                await addDoc(todosRef, {
-                    text: text.trim(),
-                    completed: false,
-                    createdAt: serverTimestamp() // Fügt den Server-Zeitstempel hinzu
-                });
-                taskInput.value = ''; // Eingabe leeren
-            } catch (error) {
-                console.error("Fehler beim Hinzufügen der Aufgabe:", error);
-                alertMessage("Fehler beim Hinzufügen der Aufgabe.", 'error');
+            if (name) {
+                const customersRef = collection(db, getCustomerCollectionPath(userId));
+                try {
+                    await addDoc(customersRef, {
+                        name: name,
+                        contact: contact,
+                        createdAt: serverTimestamp()
+                    });
+                    nameInput.value = '';
+                    contactInput.value = '';
+                } catch (error) {
+                    console.error("Fehler beim Hinzufügen des Kunden:", error);
+                    alertMessage("Fehler beim Hinzufügen des Kunden.", 'error');
+                }
             }
-        }
+        });
 
         /**
-         * Aktualisiert den Abgeschlossen-Status einer Aufgabe.
-         * @param {string} id Die Dokument-ID der Aufgabe.
-         * @param {boolean} completed Der neue Status.
+         * Löscht einen Kunden aus Firestore.
+         * @param {string} id Die Dokument-ID des Kunden.
          */
-        async function toggleTodo(id, completed) {
+        async function deleteCustomer(id) {
             if (!userId) return;
 
-            const todoDocRef = doc(db, getCollectionPath(userId), id);
+            const customerDocRef = doc(db, getCustomerCollectionPath(userId), id);
             try {
-                await updateDoc(todoDocRef, {
-                    completed: completed
-                });
+                await deleteDoc(customerDocRef);
+                alertMessage("Kunde erfolgreich gelöscht.", 'success');
             } catch (error) {
-                console.error("Fehler beim Aktualisieren der Aufgabe:", error);
-                alertMessage("Fehler beim Aktualisieren der Aufgabe.", 'error');
+                console.error("Fehler beim Löschen des Kunden:", error);
+                alertMessage("Fehler beim Löschen des Kunden.", 'error');
             }
         }
 
         /**
-         * Löscht eine Aufgabe aus Firestore.
-         * @param {string} id Die Dokument-ID der Aufgabe.
-         */
-        async function deleteTodo(id) {
-            if (!userId) return;
-
-            const todoDocRef = doc(db, getCollectionPath(userId), id);
-            try {
-                await deleteDoc(todoDocRef);
-            } catch (error) {
-                console.error("Fehler beim Löschen der Aufgabe:", error);
-                alertMessage("Fehler beim Löschen der Aufgabe.", 'error');
-            }
-        }
-
-        // --- DOM MANIPULATION ---
-
-        /**
-         * Erstellt das HTML-Element für eine einzelne Aufgabe.
-         * @param {Object} todo Die Aufgaben-Daten ({id, text, completed}).
+         * Erstellt das HTML-Element für einen einzelnen Kunden.
+         * @param {Object} customer Die Kundendaten ({id, name, contact}).
          * @returns {HTMLElement} Das erstellte Listenelement.
          */
-        function createTodoElement(todo) {
-            const li = document.createElement('li');
-            li.id = `todo-${todo.id}`;
-            li.className = `flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-sm transition duration-150 ease-in-out hover:shadow-md animate-fadeIn ${todo.completed ? 'completed-task' : 'bg-white'}`;
-            li.setAttribute('data-id', todo.id);
+        function createCustomerElement(customer) {
+            const div = document.createElement('div');
+            div.className = 'grid grid-cols-5 gap-4 items-center p-3 hover:bg-gray-50 transition duration-100';
+            
+            // Name (Col 1-2)
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'col-span-2 text-gray-800 font-medium truncate';
+            nameSpan.textContent = customer.name;
+            
+            // Kontakt (Col 3-4)
+            const contactSpan = document.createElement('span');
+            contactSpan.className = 'col-span-2 text-gray-500 truncate text-sm';
+            contactSpan.textContent = customer.contact || 'N/A';
+            
+            // Aktionen (Col 5)
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'col-span-1 flex justify-end';
 
-            // Checkbox und Text
-            const contentDiv = document.createElement('div');
-            contentDiv.className = 'flex items-center flex-grow min-w-0';
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = todo.completed;
-            checkbox.className = 'w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer';
-            checkbox.onchange = () => toggleTodo(todo.id, checkbox.checked);
-
-            const textSpan = document.createElement('span');
-            textSpan.className = 'task-text ml-4 text-gray-700 break-words flex-grow';
-            textSpan.textContent = todo.text;
-
-            contentDiv.appendChild(checkbox);
-            contentDiv.appendChild(textSpan);
-
-            // Löschen-Button
             const deleteButton = document.createElement('button');
             deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 hover:text-red-500 transition" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" />
             </svg>`;
-            deleteButton.className = 'ml-4 p-1 rounded-full hover:bg-gray-100 flex-shrink-0';
-            deleteButton.title = 'Aufgabe löschen';
-            deleteButton.onclick = () => deleteTodo(todo.id);
+            deleteButton.title = 'Kunde löschen';
+            deleteButton.onclick = () => deleteCustomer(customer.id);
 
-            li.appendChild(contentDiv);
-            li.appendChild(deleteButton);
+            actionsDiv.appendChild(deleteButton);
+            div.appendChild(nameSpan);
+            div.appendChild(contactSpan);
+            div.appendChild(actionsDiv);
 
-            return li;
+            return div;
         }
 
         /**
-         * Rendert die Liste der Aufgaben im DOM.
-         * @param {Array<Object>} todos Die sortierte Liste der Aufgaben.
+         * Rendert die Liste der Kunden im DOM.
+         * @param {Array<Object>} customers Die sortierte Liste der Kunden.
          */
-        function renderTodos(todos) {
-            // Leere die Liste und zeige eine Meldung, falls keine Aufgaben vorhanden sind
-            todoListContainer.innerHTML = '';
+        function renderCustomers(customers) {
+            customerList.innerHTML = '';
 
-            if (todos.length === 0) {
+            if (customers.length === 0) {
                 const emptyMessage = document.createElement('p');
-                emptyMessage.className = 'text-center text-gray-500 p-4 border border-dashed border-gray-300 rounded-lg';
-                emptyMessage.textContent = 'Keine Aufgaben! Füge eine neue Aufgabe hinzu.';
-                todoListContainer.appendChild(emptyMessage);
+                emptyMessage.className = 'text-center text-gray-500 p-4 border border-dashed border-gray-100 m-4 rounded-lg';
+                emptyMessage.textContent = 'Bisher keine Kunden erfasst.';
+                customerList.appendChild(emptyMessage);
                 return;
             }
 
-            // Erstelle ein Dokument-Fragment für effiziente DOM-Updates
             const fragment = document.createDocumentFragment();
-            todos.forEach(todo => {
-                fragment.appendChild(createTodoElement(todo));
+            customers.forEach(customer => {
+                fragment.appendChild(createCustomerElement(customer));
             });
-            todoListContainer.appendChild(fragment);
+            customerList.appendChild(fragment);
         }
 
         /**
@@ -328,30 +425,23 @@
 
             const alertDiv = document.createElement('div');
             alertDiv.id = 'temp-alert';
-            alertDiv.className = `fixed top-5 right-5 z-50 p-4 rounded-lg shadow-xl text-white ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} animate-fadeIn`;
+            alertDiv.className = `fixed top-5 right-5 z-50 p-4 rounded-lg shadow-xl text-white ${type === 'error' ? 'bg-red-500' : 'bg-green-500'} transition duration-500 opacity-0`;
             alertDiv.textContent = message;
 
             document.body.appendChild(alertDiv);
-
+            
+            // Füge die Klasse für das Einblenden hinzu
             setTimeout(() => {
-                alertDiv.classList.remove('animate-fadeIn');
-                alertDiv.classList.add('transition', 'duration-500', 'opacity-0');
+                alertDiv.classList.remove('opacity-0');
+            }, 10); 
+
+            // Nach 3 Sekunden ausblenden
+            setTimeout(() => {
+                alertDiv.classList.add('opacity-0');
                 setTimeout(() => alertDiv.remove(), 500);
             }, 3000);
         }
 
-        // --- EREIGNIS-LISTENER ---
-        addTaskForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const text = taskInput.value.trim();
-            if (text) {
-                if (userId) {
-                    addTodo(text);
-                } else {
-                    alertMessage("Bitte warten Sie auf die Benutzeranmeldung, bevor Sie Aufgaben hinzufügen.", 'error');
-                }
-            }
-        });
     </script>
 </body>
 </html>
