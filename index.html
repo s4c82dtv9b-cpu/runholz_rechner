@@ -3,161 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sägewerk Mülleder - Rundholz-Rechner</title>
-    <!-- Tailwind CSS laden -->
+    <title>Rundholz-Volumenrechner</title>
+    <!-- Tailwind CSS CDN für das Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Allgemeine Container-Größe */
-        body {
-            background-color: #111827; /* gray-900 */
-            color: #f3f4f6; /* gray-100 */
-            font-family: 'Inter', sans-serif;
-        }
-        .app-container {
-            max-width: 800px; 
-            margin: auto;
-            min-height: 10vh;
-            display: flex;
-            flex-direction: column;
-            padding: 1rem;
-        }
-        input, select, button {
-            font-size: 1rem; 
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4B5563;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1F2937;
-        }
-        
-        /* Table styles für die App-Ansicht */
-        .log-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .log-table th, .log-table td {
-            padding: 0.75rem 0.5rem;
-            text-align: left;
-            font-size: 0.875rem;
-            vertical-align: middle;
-            border-bottom: 1px solid #374151;
-        }
-        .log-table th {
-            font-weight: 600;
-            color: #10b981; /* forest-green */
-            text-transform: uppercase;
-            font-size: 0.75rem;
-        }
-        .log-table tr:hover {
-            background-color: #374151;
-        }
-
-        /* Gutschrift / Druckansicht Styling */
-        .credit-note-view {
-            display: none; 
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            min-height: 100vh;
-            background-color: #f3f4f6;
-            z-index: 50;
-            color: #000;
-        }
-        .credit-note-paper {
-            background-color: #fff;
-            color: #000;
-            padding: 2cm;
-            min-height: 100vh;
-            margin: 2rem auto;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 1.5rem;
-        }
-        .summary-table th, .summary-table td {
-            border: 1px solid #ddd;
-            padding: 8px 12px;
-            text-align: left;
-        }
-        .summary-table th {
-            background-color: #f2f2f2;
-            font-weight: 700;
-        }
-        .summary-table tfoot td {
-            border-top: 2px solid #000;
-            font-weight: 700;
-        }
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 0.5rem;
-            font-size: 0.8rem;
-        }
-        .detail-table th, .detail-table td {
-            border: 1px solid #eee;
-            padding: 5px 8px;
-            text-align: left;
-        }
-        .detail-table th {
-            background-color: #e6e6e6;
-            font-weight: 600;
-        }
-
-        /* Media Query für den Druck */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            .app-container, .calculator-ui {
-                display: none !important;
-            }
-            .credit-note-view, .credit-note-view * {
-                visibility: visible;
-                display: block !important;
-            }
-            .credit-note-view {
-                position: absolute;
-                left: 0;
-                top: 0;
-                padding: 0;
-                margin: 0;
-                background: white;
-            }
-            .credit-note-paper {
-                box-shadow: none;
-                margin: 0;
-                padding: 1cm;
-                width: 100%;
-            }
-            .no-print {
-                display: none !important;
-            }
-            @page {
-                margin: 0;
-                size: auto;
-            }
-        }
-    </style>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'forest-green': '#10b981',
-                        'dark-bg': '#1f2937',
-                        'card-bg': '#374151',
+                        'primary': '#4CAF50', // Grüner Farbton für den Forst
+                        'secondary': '#8BC34A',
                     }
                 }
             }
         }
     </script>
+    <style>
+        /* Zusätzliches Styling, falls nötig, z.B. für Fokus-Effekte */
+        input:focus {
+            outline: 2px solid theme('colors.primary');
+            outline-offset: 2px;
+        }
+    </style>
 </head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gray-100 font-sans">
+
+    <!-- Hauptcontainer für die App -->
+    <div id="app" class="w-full max-w-lg bg-white shadow-2xl rounded-xl p-8 space-y-8 border-t-4 border-primary">
+
+        <h1 class="text-3xl font-extrabold text-gray-800 text-center">Rundholz-Volumenrechner</h1>
+        <p class="text-center text-gray-500">Berechnung nach der Würfelformel (Grundfläche * Länge).</p>
+
+        <!-- Formular für die Eingaben -->
+        <div class="space-y-6">
+            
+            <!-- Eingabe für die Länge -->
+            <div>
+                <label for="length" class="block text-sm font-medium text-gray-700 mb-2">Länge des Stammes (in Metern)</label>
+                <input type="number" id="length" min="0.01" step="0.01" placeholder="z.B. 4.0"
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+                       value="4.0">
+                <p id="length-error" class="text-red-500 text-xs mt-1 hidden">Bitte geben Sie eine gültige Länge ein.</p>
+            </div>
+
+            <!-- Eingabe für den Mittendurchmesser (oder den Durchmesser der kleineren Seite) -->
+            <div>
+                <label for="diameter" class="block text-sm font-medium text-gray-700 mb-2">Mittendurchmesser (in Zentimetern)</label>
+                <input type="number" id="diameter" min="1" step="1" placeholder="z.B. 30"
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+                       value="30">
+                <p id="diameter-error" class="text-red-500 text-xs mt-1 hidden">Bitte geben Sie einen gültigen Durchmesser ein.</p>
+            </div>
+
+            <!-- Anzahl der Stämme -->
+            <div>
+                <label for="count" class="block text-sm font-medium text-gray-700 mb-2">Anzahl der Stämme</label>
+                <input type="number" id="count" min="1" step="1" placeholder="z.B. 1"
+                       class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary transition duration-150 ease-in-out"
+                       value="1">
+            </div>
+
+            <!-- Berechnen Button -->
+            <button onclick="calculateVolume()"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-semibold text-white bg-primary hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-200 ease-in-out transform hover:scale-[1.01]">
+                Volumen berechnen
+            </button>
+        </div>
+
+        <!-- Ergebnis-Anzeige -->
+        <div id="result-container" class="mt-8 p-5 bg-secondary/10 border border-secondary rounded-lg hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2">Ergebnis</h2>
+            <p class="text-lg text-gray-700">Gesamtvolumen: <span id="volume-output" class="font-bold text-primary">0.00 m³</span></p>
+            <p class="text-sm text-gray-600 mt-1">Volumen pro Stamm: <span id="single-volume-output" class="font-medium">0.00 m³</span></p>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logik -->
+    <script>
+        /**
+         * Hauptfunktion zur Berechnung des Rundholzvolumens.
+         * Verwendet die mittlere Durchmesser-Formel (Kreisfläche * Länge).
+         */
+        function calculateVolume() {
+            // Elemente abrufen
+            const lengthInput = document.getElementById('length');
+            const diameterInput = document.getElementById('diameter');
+            const countInput = document.getElementById('count');
+            const resultContainer = document.getElementById('result-container');
+            const volumeOutput = document.getElementById('volume-output');
+            const singleVolumeOutput = document.getElementById('single-volume-output');
+            const lengthError = document.getElementById('length-error');
+            const diameterError = document.getElementById('diameter-error');
+
+            // Fehlermeldungen zurücksetzen
+            lengthError.classList.add('hidden');
+            diameterError.classList.add('hidden');
+            
+            // Eingabewerte parsen
+            const L = parseFloat(lengthInput.value); // Länge in Metern
+            const D_cm = parseFloat(diameterInput.value); // Durchmesser in Zentimetern
+            const N = parseInt(countInput.value, 10); // Anzahl der Stämme
+
+            let isValid = true;
+
+            // 1. Validierung der Länge
+            if (isNaN(L) || L <= 0) {
+                lengthError.classList.remove('hidden');
+                isValid = false;
+            }
+
+            // 2. Validierung des Durchmessers
+            if (isNaN(D_cm) || D_cm <= 0) {
+                diameterError.classList.remove('hidden');
+                isValid = false;
+            }
+
+            // 3. Validierung der Stückzahl (N darf 0 sein, muss aber mindestens 1 sein, wenn eingegeben)
+            if (isNaN(N) || N < 1) {
+                // Wenn N ungültig, setzen wir es für die Berechnung auf 1 und zeigen es nicht als Fehler, 
+                // da das Feld einen Standardwert hat.
+                const N = 1; 
+            }
+            
+            if (!isValid) {
+                resultContainer.classList.add('hidden');
+                return;
+            }
+
+            // Umrechnung des Durchmessers D von cm in Meter R (Radius)
+            // D_cm / 100 ergibt den Durchmesser in Metern (D_m)
+            // D_m / 2 ergibt den Radius in Metern (R)
+            const R = (D_cm / 100) / 2; 
+
+            // Formel: V = π * R² * L
+            // π * R² ist die Grundfläche des Stammes (A)
+            const volumeSingle = Math.PI * Math.pow(R, 2) * L;
+            
+            // Gesamtvolumen = Volumen pro Stamm * Anzahl der Stämme
+            const volumeTotal = volumeSingle * N;
+
+            // Ergebnisse formatieren und anzeigen (auf 3 Dezimalstellen runden)
+            const formattedSingleVolume = volumeSingle.toFixed(3);
+            const formattedTotalVolume = volumeTotal.toFixed(3);
+
+            singleVolumeOutput.textContent = `${formattedSingleVolume} m³`;
+            volumeOutput.textContent = `${formattedTotalVolume} m³`;
+
+            // Ergebnisbereich sichtbar machen
+            resultContainer.classList.remove('hidden');
+        }
+
+        // Bei Laden der Seite die Standardwerte einmalig berechnen lassen
+        document.addEventListener('DOMContentLoaded', () => {
+             // Kurze Verzögerung, um sicherzustellen, dass alle Elemente gerendert sind
+             setTimeout(calculateVolume, 100); 
+        });
+
+    </script>
+</body>
+</html>
