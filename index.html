@@ -53,7 +53,6 @@
     <nav class="lg:w-64 w-full bg-white shadow-2xl p-4 lg:p-6 flex lg:flex-col lg:space-y-4 space-x-3 lg:space-x-0 overflow-x-auto border-b lg:border-r lg:border-b-0">
         <h2 class="text-2xl font-extrabold text-indigo-700 hidden lg:block mb-6 border-b pb-4">Sägewerk Mülleder</h2>
 
-        <!-- onclick ATTRIBUTE ENTFERNT UND DURCH data-view ERSETZT -->
         <button id="tab-holz" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 bg-indigo-600 text-white tab-active" data-view="holz">
             Holzberechnung
         </button>
@@ -162,7 +161,7 @@
                             <span class="text-right">Aktion</span>
                         </div>
                         <div id="log-summary-table" class="divide-y divide-gray-100">
-                            <p id="loading-logs" class="text-center text-gray-500 p-6">Warte auf Kundenanmeldung und lade Protokoll...</p>
+                            <p id="loading-logs" class="text-center text-gray-500 p-6">Warte auf Benutzeranmeldung und lade Protokoll...</p>
                         </div>
                     </div>
                 </div>
@@ -245,7 +244,7 @@
                         <span class="text-right">AKTIONEN</span>
                     </div>
                     <div id="customer-list" class="divide-y divide-gray-100">
-                        <p id="loading-customers" class="text-center text-gray-500 p-6">Lade Kunden...</p>
+                        <p id="loading-customers" class="text-center text-gray-500 p-6">Warte auf Benutzeranmeldung und lade Kunden...</p>
                         <!-- Kunden werden hier dynamisch eingefügt -->
                     </div>
                 </div>
@@ -324,7 +323,6 @@
         // DOM-Elemente
         const userDisplayDesktop = document.getElementById('user-display');
         const userDisplayMobile = document.getElementById('user-display-mobile');
-        const loadingCustomers = document.getElementById('loading-customers');
         const customerList = document.getElementById('customer-list');
         const addCustomerForm = document.getElementById('add-customer-form');
         const searchInput = document.getElementById('customer-search-input');
@@ -359,10 +357,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        setLogLevel('debug');
+        setLogLevel('debug'); // Wichtig für die Fehlersuche
 
         let userId = null;
         let isAuthReady = false;
+        let isListenersSetup = false; // NEU: Flag, um doppelten Listener-Start zu verhindern
         let allCustomers = []; 
         let allLogs = []; // Speichert alle Log-Einträge
 
@@ -384,6 +383,7 @@
                  if (searchInput) {
                     searchInput.value = '';
                 }
+                // Zeigt alle Kunden beim Wechsel zur Kundenansicht an
                 renderCustomers(allCustomers);
             }
         }
@@ -404,14 +404,21 @@
         // --- AUTHENTIFIZIERUNG UND INITIALISIERUNG ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // ANMELDUNG ERFOLGREICH
                 userId = user.uid;
                 userDisplayDesktop.textContent = `Angemeldet als: ${userId}`;
                 userDisplayMobile.textContent = `Benutzer-ID: ${userId}`;
                 isAuthReady = true;
-                setupCustomerListener(userId);
-                setupLogListener(userId); // Log Listener starten
-                loadPersistentSelections(); // Gespeicherte Auswahlen laden
+
+                // Listener nur einmal starten, wenn der Benutzer bekannt ist
+                if (!isListenersSetup) {
+                    setupCustomerListener(userId);
+                    setupLogListener(userId);
+                    loadPersistentSelections(); // Gespeicherte Auswahlen laden
+                    isListenersSetup = true;
+                }
             } else if (!isAuthReady) {
+                // ERSTER START: Versuch der Anmeldung (entweder Custom Token oder anonym)
                 try {
                     if (initialAuthToken) {
                         await signInWithCustomToken(auth, initialAuthToken);
@@ -419,12 +426,16 @@
                         await signInAnonymously(auth);
                     }
                 } catch (error) {
+                    // Fehler im Anmeldeprozess (z.B. ungültiger Token)
                     console.error("Anmeldung fehlgeschlagen:", error);
                     userDisplayDesktop.textContent = 'Fehler bei der Anmeldung.';
                     userDisplayMobile.textContent = 'Fehler bei der Anmeldung.';
                     isAuthReady = true;
-                    if(document.getElementById('loading-customers')) document.getElementById('loading-customers').textContent = 'Fehler beim Laden der Kunden.';
-                    if(document.getElementById('loading-logs')) document.getElementById('loading-logs').textContent = 'Fehler beim Laden der Protokolle.';
+                    // Aktualisiere Lade-Nachrichten bei einem permanenten Fehler
+                    const loadingCustomers = document.getElementById('loading-customers');
+                    const loadingLogs = document.getElementById('loading-logs');
+                    if(loadingCustomers) loadingCustomers.textContent = 'Fehler beim Laden der Kunden (Keine Berechtigung).';
+                    if(loadingLogs) loadingLogs.textContent = 'Fehler beim Laden der Protokolle (Keine Berechtigung).';
                 }
             }
         });
@@ -532,7 +543,7 @@
                 createdAt: serverTimestamp()
             };
 
-            const woodLogsRef = collection(db, `artifacts/${appId}/users/${userId}/woodlogs`);
+            const woodLogsRef = collection(db, getLogCollectionPath(userId));
             try {
                 await addDoc(woodLogsRef, logData);
                 alertMessage(`Stamm (${volume.toFixed(3)} FM) erfolgreich erfasst.`, 'success');
@@ -564,6 +575,8 @@
          * Stellt den Echtzeit-Listener für die Kundenliste ein und befüllt das Dropdown.
          */
         function setupCustomerListener(currentUserId) {
+            if (!currentUserId) return; // Wichtige Absicherung!
+            
             const customersRef = collection(db, getCustomerCollectionPath(currentUserId));
             const q = query(customersRef);
 
@@ -587,7 +600,8 @@
 
             }, (error) => {
                 console.error("Fehler beim Abrufen der Kunden:", error);
-                if(document.getElementById('loading-customers')) document.getElementById('loading-customers').textContent = 'Fehler beim Laden der Kunden.';
+                const loadingCustomers = document.getElementById('loading-customers');
+                if(loadingCustomers) loadingCustomers.textContent = 'Fehler beim Laden der Kunden (Keine Berechtigung).';
             });
         }
         
@@ -663,10 +677,10 @@
 
             const filteredCustomers = allCustomers.filter(customer => {
                 const searchString = (
-                    customer.vorname + ' ' + 
-                    customer.nachname + ' ' +
-                    customer.ort + ' ' +
-                    customer.telefon
+                    (customer.vorname || '') + ' ' + 
+                    (customer.nachname || '') + ' ' +
+                    (customer.ort || '') + ' ' +
+                    (customer.telefon || '')
                 ).toLowerCase();
 
                 return searchString.includes(term);
@@ -727,6 +741,8 @@
          * Stellt den Echtzeit-Listener für die Protokolle ein.
          */
         function setupLogListener(currentUserId) {
+            if (!currentUserId) return; // Wichtige Absicherung!
+
             const logsRef = collection(db, getLogCollectionPath(currentUserId));
             const q = query(logsRef);
 
@@ -746,7 +762,8 @@
 
             }, (error) => {
                 console.error("Fehler beim Abrufen der Protokolle:", error);
-                if(document.getElementById('loading-logs')) document.getElementById('loading-logs').textContent = 'Fehler beim Laden der Protokolle.';
+                const loadingLogs = document.getElementById('loading-logs');
+                if(loadingLogs) loadingLogs.textContent = 'Fehler beim Laden der Protokolle (Keine Berechtigung).';
             });
         }
 
