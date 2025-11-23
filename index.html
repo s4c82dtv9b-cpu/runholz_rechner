@@ -12,7 +12,7 @@
         :root {
             font-family: 'Inter', sans-serif;
         }
-        /* Custom Scrollbar */
+        /* Custom Scrollbar (für moderne Optik) */
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
@@ -27,16 +27,18 @@
         .tab-active {
             background-color: #4f46e5 !important; /* indigo-600 */
             color: white !important;
-            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Stärkerer Shadow */
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             transform: translateY(-2px);
         }
         /* Moderner Input Stil */
         .modern-input {
             transition: all 0.2s;
+            border-width: 1px; /* Standardmäßig 1px Rand */
         }
         .modern-input:focus {
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
         }
     </style>
 </head>
@@ -52,40 +54,40 @@
         <button id="tab-kunden" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 text-gray-700 bg-gray-100 hover:bg-gray-200" onclick="showView('kunden')">
             Kundenverwaltung
         </button>
+        <!-- NEUER BUTTON: Preise ändern -->
+        <button id="tab-prices" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 text-gray-700 bg-gray-100 hover:bg-gray-200" onclick="showView('prices')">
+            Preise ändern
+        </button>
 
         <p id="user-display" class="text-xs text-gray-500 mt-auto hidden lg:block pt-6 border-t"></p>
     </nav>
 
     <!-- Hauptinhalt -->
     <main class="flex-grow p-4 sm:p-8">
-        <div class="max-w-5xl mx-auto">
+        <div class="max-w-7xl mx-auto">
             
             <header class="mb-8">
                 <h1 class="text-4xl font-extrabold text-gray-800">Sägewerk Mülleder</h1>
                 <p class="text-sm text-gray-500 lg:hidden mt-2" id="user-display-mobile"></p>
             </header>
 
-            <!-- Ansicht: Holzberechnung -->
+            <!-- Ansicht: Holzberechnung (Unverändert) -->
             <section id="view-holz" class="view-section space-y-10 bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
                 <h2 class="text-2xl font-bold text-gray-700 border-b pb-4">Volumen- und Preisberechnung (Rechteckholz)</h2>
                 
                 <form id="wood-calculation-form" class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <!-- Länge -->
                     <div>
                         <label for="length" class="block text-sm font-medium text-gray-600 mb-1">Länge (Meter)</label>
                         <input type="number" id="length" value="1.0" min="0.01" step="0.01" required class="modern-input mt-1 block w-full p-3 border-2 border-gray-200 rounded-xl">
                     </div>
-                    <!-- Breite -->
                     <div>
                         <label for="width" class="block text-sm font-medium text-gray-600 mb-1">Breite (Meter)</label>
                         <input type="number" id="width" value="0.1" min="0.01" step="0.01" required class="modern-input mt-1 block w-full p-3 border-2 border-gray-200 rounded-xl">
                     </div>
-                    <!-- Dicke -->
                     <div>
                         <label for="thickness" class="block text-sm font-medium text-gray-600 mb-1">Dicke (Meter)</label>
                         <input type="number" id="thickness" value="0.05" min="0.01" step="0.01" required class="modern-input mt-1 block w-full p-3 border-2 border-gray-200 rounded-xl">
                     </div>
-                    <!-- Preis pro m³ -->
                     <div>
                         <label for="price_per_m3" class="block text-sm font-medium text-gray-600 mb-1">Preis pro m³ (€)</label>
                         <input type="number" id="price_per_m3" value="500" min="0" step="0.01" required class="modern-input mt-1 block w-full p-3 border-2 border-gray-200 rounded-xl">
@@ -93,13 +95,10 @@
                 </form>
 
                 <div id="wood-result" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t">
-                    <!-- Volumen Card -->
                     <div class="bg-white p-6 rounded-2xl border-l-4 border-indigo-500 shadow-lg transition duration-200 hover:shadow-xl">
                         <h3 class="text-md font-semibold text-indigo-600 mb-1">Berechnetes Volumen:</h3>
                         <p id="result-volume" class="text-3xl font-extrabold text-gray-900">0.005 m³</p>
                     </div>
-
-                    <!-- Preis Card -->
                     <div class="bg-white p-6 rounded-2xl border-l-4 border-green-500 shadow-lg transition duration-200 hover:shadow-xl">
                         <h3 class="text-md font-semibold text-green-600 mb-1">Gesamtpreis:</h3>
                         <p id="result-price" class="text-3xl font-extrabold text-gray-900">2.50 €</p>
@@ -108,39 +107,82 @@
                 
             </section>
 
-            <!-- Ansicht: Kundenverwaltung -->
+            <!-- Ansicht: Kundenverwaltung (Umfangreich geändert) -->
             <section id="view-kunden" class="view-section hidden space-y-8 bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
                 <h2 class="text-2xl font-bold text-gray-700 border-b pb-4">Kundenverwaltung (Echtzeit)</h2>
 
-                <!-- Formular zur Kundenerstellung -->
-                <form id="add-customer-form" class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-                    <input
-                        type="text"
-                        id="customer-name-input"
-                        placeholder="Kundenname eingeben"
-                        required
-                        class="modern-input flex-grow p-3 border-2 border-gray-200 rounded-xl shadow-sm"
-                    >
-                     <input
-                        type="text"
-                        id="customer-contact-input"
-                        placeholder="Kontakt (E-Mail/Tel.)"
-                        class="modern-input flex-grow p-3 border-2 border-gray-200 rounded-xl shadow-sm"
-                    >
-                    <button
-                        type="submit"
-                        class="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition duration-150 ease-in-out shadow-lg focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-green-300"
-                    >
-                        Kunde hinzufügen
-                    </button>
+                <!-- Formular zur Kundenerstellung mit allen neuen Feldern -->
+                <form id="add-customer-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-indigo-100 rounded-xl bg-indigo-50">
+                    <div class="col-span-1">
+                        <label for="anrede" class="block text-xs font-medium text-gray-600">Anrede</label>
+                        <select id="anrede" class="modern-input w-full p-3 border-gray-300 rounded-xl">
+                            <option>Herr</option>
+                            <option>Frau</option>
+                            <option>Firma</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1">
+                        <label for="nachname" class="block text-xs font-medium text-gray-600">Nachname *</label>
+                        <input type="text" id="nachname" placeholder="Mülleder" required class="modern-input w-full p-3 border-gray-300 rounded-xl">
+                    </div>
+                    <div class="col-span-1">
+                        <label for="vorname" class="block text-xs font-medium text-gray-600">Vorname</label>
+                        <input type="text" id="vorname" placeholder="Hans" class="modern-input w-full p-3 border-gray-300 rounded-xl">
+                    </div>
+                    <div class="col-span-1">
+                        <label for="telefon" class="block text-xs font-medium text-gray-600">Telefonnummer</label>
+                        <input type="tel" id="telefon" placeholder="+43 XXX XXX XXXX" class="modern-input w-full p-3 border-gray-300 rounded-xl">
+                    </div>
+                    
+                    <div class="col-span-2 md:col-span-1">
+                        <label for="adresse" class="block text-xs font-medium text-gray-600">Adresse</label>
+                        <input type="text" id="adresse" placeholder="Mühlweg" class="modern-input w-full p-3 border-gray-300 rounded-xl">
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label for="hausnummer" class="block text-xs font-medium text-gray-600">Hausnr.</label>
+                        <input type="text" id="hausnummer" placeholder="42" class="modern-input w-full p-3 border-gray-300 rounded-xl">
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label for="plz" class="block text-xs font-medium text-gray-600">PLZ</label>
+                        <input type="text" id="plz" placeholder="4020" class="modern-input w-full p-3 border-gray-300 rounded-xl">
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label for="ort" class="block text-xs font-medium text-gray-600">Ort</label>
+                        <input type="text" id="ort" placeholder="Linz" class="modern-input w-full p-3 border-gray-300 rounded-xl">
+                    </div>
+
+                    <div class="col-span-full pt-2">
+                        <button
+                            type="submit"
+                            class="w-full px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition duration-150 ease-in-out shadow-lg focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-green-300"
+                        >
+                            Neuen Kunden speichern
+                        </button>
+                    </div>
                 </form>
 
-                <!-- Kundenliste -->
-                <div class="mt-8 border-2 border-gray-100 rounded-2xl custom-scrollbar max-h-[60vh] overflow-y-auto">
-                    <div class="hidden md:grid grid-cols-5 gap-4 p-4 font-bold text-sm text-gray-700 bg-gray-50 border-b rounded-t-2xl">
-                        <span class="col-span-2">NAME</span>
-                        <span class="col-span-2">KONTAKT</span>
-                        <span></span> <!-- Aktionen -->
+                <!-- Suchfeld -->
+                <div class="relative mt-8">
+                    <input
+                        type="text"
+                        id="customer-search-input"
+                        placeholder="Kunden suchen (Name, Ort oder Telefonnummer...)"
+                        class="modern-input w-full p-4 pl-12 border-2 border-gray-200 rounded-2xl shadow-inner"
+                        oninput="searchCustomers(this.value)"
+                    >
+                    <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+
+                <!-- Kundenliste (Als responsive Grid-Tabelle) -->
+                <div class="mt-6 border-2 border-gray-100 rounded-2xl custom-scrollbar max-h-[60vh] overflow-y-auto shadow-inner">
+                    <!-- Tabellenkopf (Desktop) -->
+                    <div class="hidden lg:grid grid-cols-[80px_2fr_2fr_1.5fr_1.5fr_100px] gap-4 p-4 font-bold text-sm text-gray-700 bg-gray-50 border-b rounded-t-2xl sticky top-0 z-10">
+                        <span>Anrede</span>
+                        <span>NAME</span>
+                        <span>ADRESSE</span>
+                        <span>PLZ & ORT</span>
+                        <span>TELEFON</span>
+                        <span class="text-right">AKTIONEN</span>
                     </div>
                     <div id="customer-list" class="divide-y divide-gray-100">
                         <p id="loading-customers" class="text-center text-gray-500 p-6">Lade Kunden...</p>
@@ -148,6 +190,15 @@
                     </div>
                 </div>
 
+            </section>
+            
+            <!-- Ansicht: Preise ändern (Platzhalter) -->
+            <section id="view-prices" class="view-section hidden space-y-8 bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
+                <h2 class="text-2xl font-bold text-gray-700 border-b pb-4">Preisanpassung</h2>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-lg">
+                    <p class="font-semibold">Diese Funktion ist noch nicht implementiert.</p>
+                    <p class="text-sm mt-1">Sie können diesen Bereich nutzen, um später Stammdaten (wie den Preis pro Kubikmeter) zu verwalten.</p>
+                </div>
             </section>
         </div>
     </main>
@@ -169,13 +220,17 @@
         const loadingCustomers = document.getElementById('loading-customers');
         const customerList = document.getElementById('customer-list');
         const addCustomerForm = document.getElementById('add-customer-form');
+        const searchInput = document.getElementById('customer-search-input');
+
         const views = {
             holz: document.getElementById('view-holz'),
-            kunden: document.getElementById('view-kunden')
+            kunden: document.getElementById('view-kunden'),
+            prices: document.getElementById('view-prices') // Neuer View
         };
         const tabs = {
             holz: document.getElementById('tab-holz'),
-            kunden: document.getElementById('tab-kunden')
+            kunden: document.getElementById('tab-kunden'),
+            prices: document.getElementById('tab-prices') // Neuer Tab
         };
         const woodInputs = {
             length: document.getElementById('length'),
@@ -195,19 +250,17 @@
 
         let userId = null;
         let isAuthReady = false;
+        let allCustomers = []; // Speichert alle Kunden für die lokale Suche
 
         // --- AUTHENTIFIZIERUNG UND INITIALISIERUNG ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Benutzer ist erfolgreich angemeldet
                 userId = user.uid;
                 userDisplayDesktop.textContent = `Angemeldet als: ${userId}`;
                 userDisplayMobile.textContent = `Benutzer-ID: ${userId}`;
                 isAuthReady = true;
-                // Startet den Firestore-Listener für Kunden
                 setupCustomerListener(userId);
             } else if (!isAuthReady) {
-                // Nur beim ersten Mal versuchen, sich anzumelden
                 try {
                     if (initialAuthToken) {
                         await signInWithCustomToken(auth, initialAuthToken);
@@ -228,7 +281,7 @@
 
         /**
          * Wechselt zwischen den Dashboard-Ansichten (Tabs).
-         * @param {string} viewName 'holz' oder 'kunden'.
+         * @param {string} viewName 'holz', 'kunden' oder 'prices'.
          */
         window.showView = function(viewName) {
             // Ansichten ausblenden/einblenden
@@ -236,7 +289,6 @@
                 views[key].classList.add('hidden');
                 tabs[key].classList.remove('tab-active');
                 tabs[key].classList.remove('bg-indigo-600', 'text-white');
-                // Aktualisierter Stil für inaktive Tabs
                 tabs[key].classList.add('text-gray-700', 'bg-gray-100', 'hover:bg-gray-200');
             });
 
@@ -246,79 +298,72 @@
             tabs[viewName].classList.add('bg-indigo-600', 'text-white');
             tabs[viewName].classList.remove('text-gray-700', 'bg-gray-100', 'hover:bg-gray-200');
             
-            // Wenn zur Holzberechnung gewechselt wird, sofort neu berechnen
             if (viewName === 'holz') {
                 calculateWood();
             }
+            if (viewName === 'kunden') {
+                 // Zeige beim Wechsel die gesamte Liste an (setze Suchfeld zurück)
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+                renderCustomers(allCustomers);
+            }
         }
 
-        // --- HOLZBERECHNUNG ---
+        // --- HOLZBERECHNUNG (Unverändert) ---
 
-        /**
-         * Berechnet Volumen und Preis basierend auf den Eingaben.
-         */
         function calculateWood() {
             const L = parseFloat(woodInputs.length.value) || 0;
             const B = parseFloat(woodInputs.width.value) || 0;
             const D = parseFloat(woodInputs.thickness.value) || 0;
             const pricePerM3 = parseFloat(woodInputs.price_per_m3.value) || 0;
 
-            // Volumenberechnung (in Kubikmetern)
             const volume = L * B * D;
-            // Gesamtpreisberechnung
             const totalPrice = volume * pricePerM3;
 
-            // Anzeige der Ergebnisse (formatiert auf 3 Dezimalstellen für Volumen und 2 für Preis)
             woodInputs.resultVolume.textContent = `${volume.toFixed(3)} m³`;
             woodInputs.resultPrice.textContent = `${totalPrice.toFixed(2)} €`;
         }
 
-        // Hinzufügen von Event-Listenern zu allen Eingabefeldern der Holzberechnung
         Object.values(woodInputs).forEach(input => {
             if (input.type === 'number') {
                 input.addEventListener('input', calculateWood);
             }
         });
 
-        // Initiale Berechnung beim Laden
         calculateWood();
 
 
-        // --- KUNDENVERWALTUNG (FIRESTORE) ---
+        // --- KUNDENVERWALTUNG (FIRESTORE & SUCHE) ---
 
-        /**
-         * Erstellt den Pfad zur Kundensammlung des aktuellen Benutzers.
-         * @param {string} currentUserId Die ID des aktuellen Benutzers.
-         * @returns {string} Der Firestore-Pfad zur Sammlung.
-         */
         function getCustomerCollectionPath(currentUserId) {
-             // Pfad: /artifacts/{appId}/users/{userId}/customers
             return `artifacts/${appId}/users/${currentUserId}/customers`;
         }
         
         /**
-         * Stellt den Echtzeit-Listener für die Kundenliste ein.
-         * @param {string} currentUserId Die ID des aktuellen Benutzers.
+         * Stellt den Echtzeit-Listener für die Kundenliste ein und speichert alle Kunden.
          */
         function setupCustomerListener(currentUserId) {
             const customersRef = collection(db, getCustomerCollectionPath(currentUserId));
             const q = query(customersRef);
 
-            // onSnapshot liefert Echtzeit-Updates
             onSnapshot(q, (snapshot) => {
-                // Entferne den Ladeindikator, falls vorhanden
                 const loader = document.getElementById('loading-customers');
                 if (loader) loader.remove(); 
 
-                const customers = [];
+                const newCustomers = [];
                 snapshot.forEach(doc => {
-                    customers.push({ id: doc.id, ...doc.data() });
+                    newCustomers.push({ id: doc.id, ...doc.data() });
                 });
 
-                // Sortiere Kunden nach Erstellungszeit (neueste zuerst)
-                customers.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+                // Sortiere nach Nachname
+                newCustomers.sort((a, b) => (a.nachname || '').localeCompare(b.nachname || ''));
+                
+                allCustomers = newCustomers;
+                
+                // Rendert basierend auf dem aktuellen Suchfilter (falls vorhanden)
+                searchCustomers(searchInput ? searchInput.value : '');
 
-                renderCustomers(customers);
             }, (error) => {
                 console.error("Fehler beim Abrufen der Kunden:", error);
                 customerList.innerHTML = `<p class="text-center text-red-500 p-6">Fehler beim Laden der Kunden: ${error.message}</p>`;
@@ -326,42 +371,75 @@
         }
 
         /**
+         * Filtert die Kundenliste basierend auf dem Suchbegriff.
+         * @param {string} searchTerm Der Suchbegriff.
+         */
+        window.searchCustomers = function(searchTerm) {
+            const term = searchTerm.toLowerCase().trim();
+            if (!term) {
+                renderCustomers(allCustomers);
+                return;
+            }
+
+            const filteredCustomers = allCustomers.filter(customer => {
+                // Konkateniere relevante Felder zu einem Suchstring
+                const searchString = (
+                    customer.vorname + ' ' + 
+                    customer.nachname + ' ' +
+                    customer.ort + ' ' +
+                    customer.telefon
+                ).toLowerCase();
+
+                return searchString.includes(term);
+            });
+
+            renderCustomers(filteredCustomers);
+        }
+
+        /**
          * Fügt einen neuen Kunden zu Firestore hinzu.
          */
         addCustomerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const nameInput = document.getElementById('customer-name-input');
-            const contactInput = document.getElementById('customer-contact-input');
-            const name = nameInput.value.trim();
-            const contact = contactInput.value.trim();
-
+            
             if (!userId) {
                 alertMessage("Bitte warten Sie auf die Benutzeranmeldung.", 'error');
                 return;
             }
 
-            if (name) {
-                const customersRef = collection(db, getCustomerCollectionPath(userId));
-                try {
-                    await addDoc(customersRef, {
-                        name: name,
-                        contact: contact,
-                        createdAt: serverTimestamp()
-                    });
-                    nameInput.value = '';
-                    contactInput.value = '';
-                } catch (error) {
-                    console.error("Fehler beim Hinzufügen des Kunden:", error);
-                    alertMessage("Fehler beim Hinzufügen des Kunden.", 'error');
-                }
+            const customerData = {
+                anrede: document.getElementById('anrede').value,
+                nachname: document.getElementById('nachname').value.trim(),
+                vorname: document.getElementById('vorname').value.trim(),
+                telefon: document.getElementById('telefon').value.trim(),
+                adresse: document.getElementById('adresse').value.trim(),
+                hausnummer: document.getElementById('hausnummer').value.trim(),
+                plz: document.getElementById('plz').value.trim(),
+                ort: document.getElementById('ort').value.trim(),
+                createdAt: serverTimestamp()
+            };
+
+            if (!customerData.nachname) {
+                 alertMessage("Nachname ist erforderlich.", 'error');
+                 return;
+            }
+
+            const customersRef = collection(db, getCustomerCollectionPath(userId));
+            try {
+                await addDoc(customersRef, customerData);
+                alertMessage(`Kunde ${customerData.nachname} erfolgreich gespeichert.`, 'success');
+                // Formular zurücksetzen
+                addCustomerForm.reset();
+            } catch (error) {
+                console.error("Fehler beim Hinzufügen des Kunden:", error);
+                alertMessage("Fehler beim Hinzufügen des Kunden.", 'error');
             }
         });
 
         /**
          * Löscht einen Kunden aus Firestore.
-         * @param {string} id Die Dokument-ID des Kunden.
          */
-        async function deleteCustomer(id) {
+        window.deleteCustomer = async function(id) {
             if (!userId) return;
 
             const customerDocRef = doc(db, getCustomerCollectionPath(userId), id);
@@ -376,55 +454,56 @@
 
         /**
          * Erstellt das HTML-Element für einen einzelnen Kunden.
-         * @param {Object} customer Die Kundendaten ({id, name, contact}).
-         * @returns {HTMLElement} Das erstellte Listenelement.
          */
         function createCustomerElement(customer) {
             const div = document.createElement('div');
-            // Aktualisierte Klassen für bessere visuelle Trennung und Hover-Effekte
-            div.className = 'grid grid-cols-5 gap-4 items-center p-4 transition duration-150 hover:bg-indigo-50/50';
+            // 6 Spalten-Layout: 5 Daten + 1 Aktion
+            div.className = 'grid grid-cols-[80px_2fr_2fr_1.5fr_1.5fr_100px] lg:grid-cols-[80px_2fr_2fr_1.5fr_1.5fr_100px] gap-4 items-center p-4 transition duration-150 hover:bg-indigo-50/50 text-sm md:text-base';
             
-            // Name (Col 1-2)
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'col-span-2 text-gray-800 font-semibold truncate';
-            nameSpan.textContent = customer.name;
-            
-            // Kontakt (Col 3-4)
-            const contactSpan = document.createElement('span');
-            contactSpan.className = 'col-span-2 text-gray-500 truncate text-sm';
-            contactSpan.textContent = customer.contact || 'Kein Kontakt';
-            
-            // Aktionen (Col 5)
-            const actionsDiv = document.createElement('div');
-            actionsDiv.className = 'col-span-1 flex justify-end';
+            // Mobile-freundliche Darstellung (als Spalten untereinander)
+            div.innerHTML = `
+                <!-- Mobile: Display (unsichtbar auf Desktop) -->
+                <div class="lg:hidden col-span-full font-bold text-gray-700">${customer.nachname}, ${customer.vorname}</div>
+                
+                <!-- 1. Anrede (Mobile: versteckt, Desktop: sichtbar) -->
+                <span class="text-gray-500 hidden lg:inline">${customer.anrede || 'N/A'}</span>
+                
+                <!-- 2. Name (Mobile: erste Zeile, Desktop: Spalte) -->
+                <span class="font-semibold text-gray-800 col-span-2 lg:col-span-1">${customer.nachname}, ${customer.vorname}</span>
+                
+                <!-- 3. Adresse -->
+                <span class="text-gray-600 col-span-3 lg:col-span-1 truncate" title="${customer.adresse} ${customer.hausnummer || ''}">${customer.adresse} ${customer.hausnummer || ''}</span>
+                
+                <!-- 4. PLZ & Ort -->
+                <span class="text-gray-600 col-span-3 lg:col-span-1 truncate">${customer.plz || ''} ${customer.ort || ''}</span>
 
-            const deleteButton = document.createElement('button');
-            deleteButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 hover:text-red-500 transition" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" />
-            </svg>`;
-            deleteButton.title = 'Kunde löschen';
-            deleteButton.className = 'p-1 rounded-full hover:bg-red-100';
-            deleteButton.onclick = () => deleteCustomer(customer.id);
-
-            actionsDiv.appendChild(deleteButton);
-            div.appendChild(nameSpan);
-            div.appendChild(contactSpan);
-            div.appendChild(actionsDiv);
-
+                <!-- 5. Telefon -->
+                <span class="text-gray-600 col-span-3 lg:col-span-1 truncate">${customer.telefon || 'N/A'}</span>
+                
+                <!-- 6. Aktionen -->
+                <div class="col-span-1 flex justify-end">
+                    <button onclick="deleteCustomer('${customer.id}')" title="Kunde löschen" class="p-1 rounded-full hover:bg-red-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 hover:text-red-500 transition" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            `;
             return div;
         }
 
         /**
-         * Rendert die Liste der Kunden im DOM.
-         * @param {Array<Object>} customers Die sortierte Liste der Kunden.
+         * Rendert die (gefilterte) Liste der Kunden im DOM.
          */
         function renderCustomers(customers) {
             customerList.innerHTML = '';
 
             if (customers.length === 0) {
+                const term = searchInput ? searchInput.value.trim() : '';
+                const message = term ? `Keine Kunden gefunden, die der Suche ("${term}") entsprechen.` : 'Bisher keine Kunden erfasst.';
                 const emptyMessage = document.createElement('p');
                 emptyMessage.className = 'text-center text-gray-500 p-6 border border-dashed border-gray-100 m-4 rounded-lg';
-                emptyMessage.textContent = 'Bisher keine Kunden erfasst.';
+                emptyMessage.textContent = message;
                 customerList.appendChild(emptyMessage);
                 return;
             }
@@ -438,8 +517,6 @@
 
         /**
          * Zeigt eine temporäre Benachrichtigung an (ersetzt alert()).
-         * @param {string} message Die anzuzeigende Nachricht.
-         * @param {'success' | 'error'} type Der Typ der Nachricht.
          */
         function alertMessage(message, type) {
             const existingAlert = document.getElementById('temp-alert');
@@ -447,19 +524,16 @@
 
             const alertDiv = document.createElement('div');
             alertDiv.id = 'temp-alert';
-            // Aktualisierte Klassen für bessere Sichtbarkeit
             alertDiv.className = `fixed top-5 right-5 z-50 p-4 rounded-xl shadow-2xl font-semibold text-white ${type === 'error' ? 'bg-red-600' : 'bg-green-600'} transition duration-500 opacity-0 transform translate-x-10`;
             alertDiv.textContent = message;
 
             document.body.appendChild(alertDiv);
             
-            // Füge die Klasse für das Einblenden hinzu (slidet von rechts)
             setTimeout(() => {
                 alertDiv.classList.remove('opacity-0', 'translate-x-10');
                 alertDiv.classList.add('opacity-100', 'translate-x-0');
             }, 10); 
 
-            // Nach 3 Sekunden ausblenden
             setTimeout(() => {
                 alertDiv.classList.remove('opacity-100', 'translate-x-0');
                 alertDiv.classList.add('opacity-0', 'translate-x-10');
