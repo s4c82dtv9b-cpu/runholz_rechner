@@ -53,13 +53,14 @@
     <nav class="lg:w-64 w-full bg-white shadow-2xl p-4 lg:p-6 flex lg:flex-col lg:space-y-4 space-x-3 lg:space-x-0 overflow-x-auto border-b lg:border-r lg:border-b-0">
         <h2 class="text-2xl font-extrabold text-indigo-700 hidden lg:block mb-6 border-b pb-4">Sägewerk Mülleder</h2>
 
-        <button id="tab-holz" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 bg-indigo-600 text-white tab-active" onclick="showView('holz')">
+        <!-- onclick ATTRIBUTE ENTFERNT UND DURCH data-view ERSETZT -->
+        <button id="tab-holz" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 bg-indigo-600 text-white tab-active" data-view="holz">
             Holzberechnung
         </button>
-        <button id="tab-kunden" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 text-gray-700 bg-gray-100 hover:bg-gray-200" onclick="showView('kunden')">
+        <button id="tab-kunden" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 text-gray-700 bg-gray-100 hover:bg-gray-200" data-view="kunden">
             Kundenverwaltung
         </button>
-        <button id="tab-prices" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 text-gray-700 bg-gray-100 hover:bg-gray-200" onclick="showView('prices')">
+        <button id="tab-prices" class="tab-button flex-shrink-0 px-5 py-3 rounded-full text-sm font-semibold transition duration-200 text-gray-700 bg-gray-100 hover:bg-gray-200" data-view="prices">
             Preise ändern
         </button>
 
@@ -167,7 +168,7 @@
                 </div>
             </section>
 
-            <!-- Ansicht: Kundenverwaltung (Unverändert) -->
+            <!-- Ansicht: Kundenverwaltung -->
             <section id="view-kunden" class="view-section hidden space-y-8 bg-white p-6 sm:p-10 rounded-3xl shadow-2xl">
                  <h2 class="text-2xl font-bold text-gray-700 border-b pb-4">Kundenverwaltung (Echtzeit)</h2>
                 <!-- Formular zur Kundenerstellung mit allen neuen Feldern -->
@@ -366,6 +367,40 @@
         let allLogs = []; // Speichert alle Log-Einträge
 
 
+        // --- DASHBOARD NAVIGATION ---
+
+        window.showView = function(viewName) {
+            Object.keys(views).forEach(key => {
+                views[key].classList.add('hidden');
+                tabs[key].classList.remove('tab-active', 'bg-indigo-600', 'text-white');
+                tabs[key].classList.add('text-gray-700', 'bg-gray-100', 'hover:bg-gray-200');
+            });
+
+            views[viewName].classList.remove('hidden');
+            tabs[viewName].classList.add('tab-active', 'bg-indigo-600', 'text-white');
+            tabs[viewName].classList.remove('text-gray-700', 'bg-gray-100', 'hover:bg-gray-200');
+            
+            if (viewName === 'kunden') {
+                 if (searchInput) {
+                    searchInput.value = '';
+                }
+                renderCustomers(allCustomers);
+            }
+        }
+        
+        // NEU: Hinzufügen von Event Listeners für die Tabs
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const viewName = button.getAttribute('data-view');
+                    if (viewName) {
+                        showView(viewName);
+                    }
+                });
+            });
+        });
+
+
         // --- AUTHENTIFIZIERUNG UND INITIALISIERUNG ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -393,27 +428,6 @@
                 }
             }
         });
-
-        // --- DASHBOARD NAVIGATION ---
-
-        window.showView = function(viewName) {
-            Object.keys(views).forEach(key => {
-                views[key].classList.add('hidden');
-                tabs[key].classList.remove('tab-active', 'bg-indigo-600', 'text-white');
-                tabs[key].classList.add('text-gray-700', 'bg-gray-100', 'hover:bg-gray-200');
-            });
-
-            views[viewName].classList.remove('hidden');
-            tabs[viewName].classList.add('tab-active', 'bg-indigo-600', 'text-white');
-            tabs[viewName].classList.remove('text-gray-700', 'bg-gray-100', 'hover:bg-gray-200');
-            
-            if (viewName === 'kunden') {
-                 if (searchInput) {
-                    searchInput.value = '';
-                }
-                renderCustomers(allCustomers);
-            }
-        }
 
         // --- HOLZBERECHNUNG LOGIK ---
 
