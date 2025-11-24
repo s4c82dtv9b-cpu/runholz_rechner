@@ -222,7 +222,11 @@
         let editIndex = -1;
         const submitButton = document.getElementById('submitButton');
 
-        // Funktion zum Laden der Kunden aus dem localStorage
+        function saveKunden() {
+    localStorage.setItem('kundenDaten', JSON.stringify(kunden));
+}// Funktion zum Laden der Kunden aus dem localStorage
+
+        
         function loadKunden() {
             try {
                 const savedKunden = localStorage.getItem('kundenDaten');
