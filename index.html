@@ -98,28 +98,15 @@
                 </div>
                 
                 <!-- Erste Zeile: Kunde, Holzart, Qualität -->
-                <div class="mb-10 p-6 bg-gray-50 border border-gray-200 rounded-lg">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-700">1. Kunde auswählen</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Dropdown -->
-                <div>
-                    <label for="select-customer" class="block text-sm font-medium text-gray-600 mb-1">Kunde</label>
-                    <select id="select-customer" class="modern-input block w-full p-3 border-2 border-gray-200 rounded-xl">
-                        <option value="">-- Kunden auswählen --</option>
-                        <!-- Optionen werden von JS gefüllt -->
-                    </select>
-                </div>
-
-                <!-- Anzeige der Adresse (dynamisch) -->
-                <div class="md:col-span-2 p-3 bg-white border border-dashed border-gray-300 rounded-lg">
-                    <p class="text-sm font-medium text-gray-600 mb-1">Ausgewählte Kundenadresse:</p>
-                    <div id="customer-address" class="text-base text-gray-800 font-mono">
-                        Bitte wählen Sie einen Kunden aus.
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Kunde auswählen -->
+                    <div>
+                        <label for="select-customer" class="block text-sm font-medium text-gray-600 mb-1">Kunde</label>
+                        <select id="select-customer" class="modern-input block w-full p-3 border-2 border-gray-200 rounded-xl">
+                            <option value="">-- Kunden auswählen --</option>
+                            <!-- Optionen werden von JS gefüllt -->
+                        </select>
                     </div>
-                </div>
-            </div>
-        </div>
 
                     <!-- Holzart -->
                     <div>
