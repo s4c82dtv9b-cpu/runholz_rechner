@@ -98,14 +98,6 @@
                 </div>
                 
                 <!-- Erste Zeile: Kunde, Holzart, Qualität -->
-
-                function loadKunden() {
-    const savedKunden = localStorage.getItem('kundenDaten');
-    if (savedKunden) {
-        allKunden = JSON.parse(savedKunden);
-    }
-    populateCustomerDropdown();
-}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Kunde auswählen -->
                     <div>
@@ -612,6 +604,14 @@
 
 
         // --- KUNDENVERWALTUNG (FIRESTORE) ---
+
+        function loadKunden() {
+    const savedKunden = localStorage.getItem('kundenDaten');
+    if (savedKunden) {
+        allKunden = JSON.parse(savedKunden);
+    }
+    populateCustomerDropdown();
+}
 
         function getCustomerCollectionPath(currentUserId) {
             return `artifacts/${appId}/users/${currentUserId}/customers`;
