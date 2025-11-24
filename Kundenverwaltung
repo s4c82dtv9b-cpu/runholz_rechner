@@ -30,6 +30,16 @@
             gap: 15px;
         }
 
+        /* Responsive Anpassung für kleinere Bildschirme (Mobile) */
+        @media (max-width: 768px) {
+            #kundenForm {
+                grid-template-columns: 1fr; /* Nur eine Spalte auf Mobilgeräten */
+            }
+            #kundenForm button {
+                grid-column: 1 / 2; /* Button nimmt die volle Breite ein */
+            }
+        }
+
         #kundenForm div {
             display: flex;
             flex-direction: column;
@@ -122,6 +132,7 @@
 
     <h1>Kundenverwaltung</h1>
 
+    <!-- Eingabeformular -->
     <form id="kundenForm">
         <div>
             <label for="nachname">Nachname:</label>
@@ -159,22 +170,26 @@
 
     <h2>Kundenübersicht</h2>
 
-    <table id="kundenTabelle">
-        <thead>
-            <tr>
-                <th>Nachname</th>
-                <th>Vorname</th>
-                <th>Adresse</th>
-                <th>Hausnummer</th>
-                <th>PLZ</th>
-                <th>Ort</th>
-                <th>Telefonnummer</th>
-                <th>Aktionen</th>
-            </tr>
-        </thead>
-        <tbody id="kundenListe">
+    <!-- Kundentabelle -->
+    <div style="overflow-x: auto;">
+        <table id="kundenTabelle">
+            <thead>
+                <tr>
+                    <th>Nachname</th>
+                    <th>Vorname</th>
+                    <th>Adresse</th>
+                    <th>Hausnummer</th>
+                    <th>PLZ</th>
+                    <th>Ort</th>
+                    <th>Telefonnummer</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody id="kundenListe">
+                <!-- Hier werden die Kundendaten eingefügt -->
             </tbody>
-    </table>
+        </table>
+    </div>
 
     <script>
         const form = document.getElementById('kundenForm');
@@ -186,16 +201,27 @@
 
         // Funktion zum Laden der Kunden aus dem localStorage
         function loadKunden() {
-            const savedKunden = localStorage.getItem('kundenDaten');
-            if (savedKunden) {
-                kunden = JSON.parse(savedKunden);
+            try {
+                const savedKunden = localStorage.getItem('kundenDaten');
+                if (savedKunden) {
+                    kunden = JSON.parse(savedKunden);
+                }
+                renderKunden();
+            } catch (error) {
+                console.error("Fehler beim Laden der Kundendaten:", error);
+                // Fallback, falls localStorage beschädigt ist
+                kunden = []; 
+                renderKunden();
             }
-            renderKunden();
         }
 
         // Funktion zum Speichern der Kunden im localStorage
         function saveKunden() {
-            localStorage.setItem('kundenDaten', JSON.stringify(kunden));
+            try {
+                localStorage.setItem('kundenDaten', JSON.stringify(kunden));
+            } catch (error) {
+                console.error("Fehler beim Speichern der Kundendaten:", error);
+            }
         }
 
         // Funktion zum Rendern der Tabelle
@@ -208,11 +234,11 @@
                 // Datenzellen einfügen
                 row.insertCell().textContent = kunde.nachname;
                 row.insertCell().textContent = kunde.vorname;
-                row.insertCell().textContent = kunde.adresse;
-                row.insertCell().textContent = kunde.hausnummer;
-                row.insertCell().textContent = kunde.plz;
-                row.insertCell().textContent = kunde.ort;
-                row.insertCell().textContent = kunde.telefonnummer;
+                row.insertCell().textContent = `${kunde.adresse || ''}`;
+                row.insertCell().textContent = `${kunde.hausnummer || ''}`;
+                row.insertCell().textContent = `${kunde.plz || ''}`;
+                row.insertCell().textContent = `${kunde.ort || ''}`;
+                row.insertCell().textContent = `${kunde.telefonnummer || ''}`;
 
                 // Aktionszelle mit Buttons
                 const actionCell = row.insertCell();
@@ -268,13 +294,13 @@
             const kundeToEdit = kunden[index];
 
             // Daten in die Formularfelder laden
-            document.getElementById('nachname').value = kundeToEdit.nachname;
-            document.getElementById('vorname').value = kundeToEdit.vorname;
-            document.getElementById('adresse').value = kundeToEdit.adresse;
-            document.getElementById('hausnummer').value = kundeToEdit.hausnummer;
-            document.getElementById('plz').value = kundeToEdit.plz;
-            document.getElementById('ort').value = kundeToEdit.ort;
-            document.getElementById('telefonnummer').value = kundeToEdit.telefonnummer;
+            document.getElementById('nachname').value = kundeToEdit.nachname || '';
+            document.getElementById('vorname').value = kundeToEdit.vorname || '';
+            document.getElementById('adresse').value = kundeToEdit.adresse || '';
+            document.getElementById('hausnummer').value = kundeToEdit.hausnummer || '';
+            document.getElementById('plz').value = kundeToEdit.plz || '';
+            document.getElementById('ort').value = kundeToEdit.ort || '';
+            document.getElementById('telefonnummer').value = kundeToEdit.telefonnummer || '';
 
             // Bearbeitungsmodus setzen
             isEditing = true;
@@ -285,7 +311,9 @@
 
         // Löschen-Funktion
         function deleteKunde(index) {
-            if (confirm(`Sind Sie sicher, dass Sie den Kunden ${kunden[index].nachname} ${kunden[index].vorname} löschen möchten?`)) {
+             // Benutzerdefinierte Bestätigungsmeldung statt alert() oder confirm()
+            const name = kunden[index].nachname || "dieser Kunde";
+            if (window.confirm(`Sind Sie sicher, dass Sie den Kunden ${name} löschen möchten?`)) {
                 kunden.splice(index, 1); // Eintrag aus dem Array entfernen
                 saveKunden();
                 renderKunden();
